@@ -34,7 +34,8 @@ class DatabaseHelper {
         account TEXT,
         payMode TEXT,
         ref_number TEXT,
-        is_hidden INTEGER DEFAULT 0
+        is_hidden INTEGER DEFAULT 0,
+        is_manual INTEGER DEFAULT 0
       )
     ''');
   }

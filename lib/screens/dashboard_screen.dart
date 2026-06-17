@@ -145,7 +145,16 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
       debugPrint("DEBUG SUMMARY: Added: $addedCount, Rejected Bank SMS: $rejectedCount");
 
       await _loadExpensesFromDB();
-      if (mounted && addedCount > 0) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sync complete: $addedCount expenses tracked."), backgroundColor: AppConstants.primaryColor));
+      // ---> UPDATE: NAYA POPUP LOGIC <---
+      if (mounted) {
+        if (addedCount > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sync complete: $addedCount new records tracked."), backgroundColor: Colors.green));
+        } else {
+          // Agar 0 records mile toh yeh orange wala dikhega
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Up to date! No new records found."), backgroundColor: Colors.orange));
+        }
+      }
+      // ----------------------------------
     } catch (e) {
       debugPrint("Sync Error: $e");
     }
@@ -260,19 +269,23 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
 
   void _showExpenseDetails(BuildContext context, {Map<String, dynamic>? exp}) {
     final bool isNew = exp == null;
-    final bool isManual = isNew || exp['body'] == 'Added manually by user.';
+
+    // ---> UPDATE 1: Ab 'is_manual' database flag se check hoga <---
+    final bool isManual = isNew || (exp['is_manual'] == 1);
 
     final TextEditingController amountCtrl = TextEditingController(text: isNew ? '' : exp['amount'].toString());
     final TextEditingController merchantCtrl = TextEditingController(text: isNew ? '' : exp['merchant']);
-
-    // ---> NAYA CONTROLLER: NOTE/BODY KE LIYE <---
-    final TextEditingController bodyCtrl = TextEditingController(text: isNew ? 'Added manually by user.' : (exp['body'] ?? ''));
-
-    String selectedCategory = isNew ? 'Other' : (exp['category'] ?? SmsParserService.getFallbackCategory(exp['merchant']));
-    final String bodyText = isNew ? '' : (exp['body'] ?? "Original SMS content is unavailable.");
+    final TextEditingController bodyCtrl = TextEditingController(text: isNew ? '' : (exp['body'] ?? ''));
 
     String txType = isNew ? 'Debit' : (exp['type'] ?? 'Debit');
     bool isExpenseModal = isNew ? true : (exp['is_expense'] == null || exp['is_expense'] == 1);
+
+    List<String> currentCategories = (txType == 'Credit') ? AppConstants.incomeCategories : AppConstants.categories;
+    String selectedCategory = isNew ? (txType == 'Credit' ? currentCategories.first : 'Other') : (exp['category'] ?? SmsParserService.getFallbackCategory(exp['merchant']));
+
+    if (!currentCategories.contains(selectedCategory)) selectedCategory = currentCategories.first;
+
+    final String bodyText = isNew ? '' : (exp['body'] ?? "Original SMS content is unavailable.");
 
     showModalBottomSheet(
       context: context,
@@ -282,6 +295,8 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
+            currentCategories = (txType == 'Credit') ? AppConstants.incomeCategories : AppConstants.categories;
+
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 24, left: 24, right: 24, top: 16),
               child: SingleChildScrollView(
@@ -297,51 +312,76 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                       ),
                     ),
                     const SizedBox(height: 20),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          isNew ? "Add Manual Expense" : "Transaction Analysis",
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppConstants.primaryColor),
+                        Expanded(
+                          child: Text(
+                            isNew ? (txType == 'Credit' ? "Add Income" : "Add Expense") : "Edit Transaction",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: txType == 'Credit' ? Colors.green : AppConstants.primaryColor),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        if (!isNew)
-                          Row(
-                            children: [
-                              // ---> CORRECTED LOGIC: HIDE/UNHIDE BUTTON <---
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                setModalState(() {
+                                  txType = (txType == 'Credit') ? 'Debit' : 'Credit';
+                                  selectedCategory = (txType == 'Credit') ? AppConstants.incomeCategories.first : 'Other';
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: txType == 'Credit' ? Colors.green.shade50 : Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: txType == 'Credit' ? Colors.green.shade300 : Colors.red.shade300),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      txType == 'Credit' ? "INCOME" : "EXPENSE",
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: txType == 'Credit' ? Colors.green.shade700 : Colors.red.shade700),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.swap_horiz, size: 16, color: txType == 'Credit' ? Colors.green.shade700 : Colors.red.shade700),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (!isNew) ...[
+                              const SizedBox(width: 4),
                               IconButton(
-                                // Agar hidden (1) hai toh band aankh (visibility_off), warna khuli aankh (visibility)
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                                 icon: Icon((exp['is_hidden'] == 1) ? Icons.visibility_off : Icons.visibility, color: Colors.orange, size: 24),
-                                tooltip: (exp['is_hidden'] == 1) ? "Unhide Transaction" : "Hide Transaction",
                                 onPressed: () async {
                                   int newStatus = (exp['is_hidden'] == 1) ? 0 : 1;
                                   await DatabaseHelper.instance.toggleHideExpense(exp['id'], newStatus);
-
-                                  // Data dubara load karo (Dashboard ya All Transactions jahan bhi ho)
                                   await _loadExpensesFromDB();
-
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(newStatus == 1 ? "Transaction hidden!" : "Transaction unhidden!"), backgroundColor: Colors.orange));
-                                  }
+                                  if (context.mounted) Navigator.pop(context);
                                 },
                               ),
-                              // ----------------------------------------
-
-                              // ----------------------------------------
-                              if (isManual) // Manual entry ke liye Delete button
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
-                                  onPressed: () async {
-                                    await DatabaseHelper.instance.deleteExpense(exp['id']);
-                                    await _loadExpensesFromDB();
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Deleted successfully."), backgroundColor: Colors.redAccent));
-                                    }
-                                  },
-                                ),
                             ],
-                          ),
+                            if (isManual && !isNew) ...[
+                              const SizedBox(width: 4),
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
+                                onPressed: () async {
+                                  await DatabaseHelper.instance.deleteExpense(exp['id']);
+                                  await _loadExpensesFromDB();
+                                  if (context.mounted) Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -368,41 +408,36 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // ---> NAYA TEXTFIELD: SIRF MANUAL ENTRY ME DIKHEGA <---
                     if (isManual) ...[
                       TextField(
                         controller: bodyCtrl,
                         maxLines: 2,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: InputDecoration(
-                          labelText: "Note / Description (Optional)",
+                          labelText: "Note (Optional)",
                           prefixIcon: const Icon(Icons.notes, size: 18),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                       const SizedBox(height: 20),
                     ],
-
                     if (!isManual) ...[
-                      // ---> YAHAN COPY BUTTON ADD KIYA HAI BINA KUCH CHHEDE <---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            "Original SMS Source Text",
+                            "Original SMS Text",
                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
                           ),
                           InkWell(
                             onTap: () {
                               Clipboard.setData(ClipboardData(text: bodyText));
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("SMS copied!"), backgroundColor: Colors.green, duration: Duration(seconds: 2)));
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Copied!"), backgroundColor: Colors.green));
                             },
                             child: const Icon(Icons.copy, size: 16, color: AppConstants.primaryColor),
                           ),
                         ],
                       ),
-                      // ---------------------------------------------------------
                       const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
@@ -423,19 +458,12 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            txType == 'Credit' ? "Income" : "Expense",
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: txType == 'Credit' ? Colors.green : Colors.red),
+                            txType == 'Credit' ? "Valid Income (Include in Total)" : "Valid Expense (Include in Total)",
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: txType == 'Credit' ? Colors.green : Colors.red),
                           ),
                           Transform.scale(
                             scale: 0.75,
-                            child: Switch(
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              value: isExpenseModal,
-                              activeThumbColor: txType == 'Credit' ? Colors.green : Colors.red,
-                              onChanged: (val) {
-                                setModalState(() => isExpenseModal = val);
-                              },
-                            ),
+                            child: Switch(materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, value: isExpenseModal, activeThumbColor: txType == 'Credit' ? Colors.green : Colors.red, onChanged: (val) => setModalState(() => isExpenseModal = val)),
                           ),
                         ],
                       ),
@@ -451,9 +479,9 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                     Wrap(
                       spacing: 8.0,
                       runSpacing: 10.0,
-                      children: AppConstants.categories.map((String c) {
+                      children: currentCategories.map((String c) {
                         bool isSelected = selectedCategory == c;
-                        Color catColor = AppConstants.categoryColors[c] ?? Colors.grey;
+                        Color catColor = AppConstants.getCategoryColor(c);
                         return ChoiceChip(
                           label: Text(c),
                           selected: isSelected,
@@ -467,17 +495,7 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                           ),
                           labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13),
                           onSelected: (bool selected) {
-                            if (selected) {
-                              setModalState(() {
-                                selectedCategory = c;
-
-                                if (c == 'Transfer') {
-                                  isExpenseModal = false;
-                                } else if (txType != 'Credit') {
-                                  isExpenseModal = true;
-                                }
-                              });
-                            }
+                            if (selected) setModalState(() => selectedCategory = c);
                           },
                         );
                       }).toList(),
@@ -489,7 +507,7 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                       height: 48,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppConstants.primaryColor,
+                          backgroundColor: txType == 'Credit' ? Colors.green : AppConstants.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
@@ -499,24 +517,30 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                           double amt = double.tryParse(amountCtrl.text) ?? 0.0;
                           String newMerchant = merchantCtrl.text;
                           final db = await DatabaseHelper.instance.database;
-
                           int finalExpenseFlag = isExpenseModal ? 1 : 0;
 
                           if (isNew) {
-                            await DatabaseHelper.instance.insertExpense({'amount': amt, 'merchant': newMerchant, 'date': DateTime.now().toIso8601String(), 'type': txType, 'body': bodyCtrl.text.isNotEmpty ? bodyCtrl.text : 'Added manually by user.', 'category': selectedCategory, 'is_expense': finalExpenseFlag, 'is_edited': 0});
+                            // ---> UPDATE 2: Nayi entry save karte time 'is_manual: 1' bhejna hai <---
+                            await DatabaseHelper.instance.insertExpense({
+                              'amount': amt, 'merchant': newMerchant, 'date': DateTime.now().toIso8601String(),
+                              'type': txType, 'body': bodyCtrl.text.isNotEmpty ? bodyCtrl.text : '',
+                              'category': selectedCategory, 'is_expense': finalExpenseFlag,
+                              'is_edited': 0, 'is_manual': 1, // <-- Yahan add kiya
+                            });
                           } else {
-                            int currentIsEdited = (exp.containsKey('is_edited') && exp['is_edited'] != null) ? exp['is_edited'] : 0;
-                            int newIsEdited = (newMerchant != exp['merchant']) ? 1 : currentIsEdited;
+                            // ---> UPDATE 3: Agar edit ho raha hai, toh 'is_edited' hamesha 1 hoga <---
+                            int newIsEdited = 1;
+
                             if (isManual) {
-                              await db.update('expenses', {'amount': amt, 'merchant': newMerchant, 'body': bodyCtrl.text.isNotEmpty ? bodyCtrl.text : 'Added manually by user.', 'category': selectedCategory, 'is_edited': newIsEdited, 'is_expense': finalExpenseFlag}, where: 'id = ?', whereArgs: [exp['id']]);
+                              await db.update('expenses', {'amount': amt, 'merchant': newMerchant, 'body': bodyCtrl.text, 'category': selectedCategory, 'is_edited': newIsEdited, 'is_expense': finalExpenseFlag, 'type': txType}, where: 'id = ?', whereArgs: [exp['id']]);
                             } else {
-                              await db.update('expenses', {'merchant': newMerchant, 'category': selectedCategory, 'is_edited': newIsEdited, 'is_expense': finalExpenseFlag}, where: 'id = ?', whereArgs: [exp['id']]);
+                              await db.update('expenses', {'merchant': newMerchant, 'category': selectedCategory, 'is_edited': newIsEdited, 'is_expense': finalExpenseFlag, 'type': txType}, where: 'id = ?', whereArgs: [exp['id']]);
                             }
                           }
                           await _loadExpensesFromDB();
                           if (context.mounted) {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Changes saved successfully."), backgroundColor: AppConstants.primaryColor));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("Saved successfully."), backgroundColor: txType == 'Credit' ? Colors.green : AppConstants.primaryColor));
                           }
                         },
                         child: const Text("Save Changes", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
@@ -536,44 +560,85 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (BuildContext ctx) {
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  "Change Category for ${_selectedIds.length} items",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConstants.primaryColor),
-                ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Change Category (Bulk Edit)",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppConstants.primaryColor),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 1. EXPENSE CATEGORIES SECTION
+                  const Text(
+                    "EXPENSE CATEGORIES",
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 8.0, runSpacing: 10.0, children: AppConstants.categories.map((c) => _buildBulkChip(ctx, c, 'Debit')).toList()),
+
+                  const SizedBox(height: 24),
+
+                  // 2. INCOME CATEGORIES SECTION
+                  const Text(
+                    "INCOME CATEGORIES",
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 8.0, runSpacing: 10.0, children: AppConstants.incomeCategories.map((c) => _buildBulkChip(ctx, c, 'Credit')).toList()),
+                ],
               ),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: AppConstants.categories.length,
-                  itemBuilder: (context, index) {
-                    String category = AppConstants.categories[index];
-                    return ListTile(
-                      leading: Icon(AppConstants.getCategoryIcon(category), color: AppConstants.categoryColors[category]),
-                      title: Text(category),
-                      onTap: () async {
-                        await DatabaseHelper.instance.updateBulkCategory(_selectedIds.toList(), category);
-                        setState(() => _selectedIds.clear());
-                        await _loadExpensesFromDB();
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Categories updated successfully!"), backgroundColor: Colors.green));
-                        }
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildBulkChip(BuildContext ctx, String category, String txType) {
+    Color catColor = AppConstants.getCategoryColor(category);
+
+    return ActionChip(
+      label: Text(category, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+      avatar: Icon(AppConstants.getCategoryIcon(category), color: catColor, size: 18),
+      backgroundColor: catColor.withValues(alpha: 0.1),
+      side: const BorderSide(color: Colors.transparent),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      onPressed: () async {
+        final db = await DatabaseHelper.instance.database;
+
+        int updateCount = _selectedIds.length;
+        String idsPlaceholders = List.filled(updateCount, '?').join(',');
+
+        // ---> UPDATE: is_edited ko 1 mark kar diya <---
+        await db.update(
+          'expenses',
+          {
+            'category': category,
+            'type': txType,
+            'is_edited': 1, // Yahan add kiya hai!
+          },
+          where: 'id IN ($idsPlaceholders)',
+          whereArgs: _selectedIds.toList(),
+        );
+
+        setState(() {
+          _selectedIds.clear();
+        });
+
+        await _loadExpensesFromDB();
+
+        if (ctx.mounted) {
+          Navigator.pop(ctx);
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Updated $updateCount items to $category!"), backgroundColor: txType == 'Credit' ? Colors.green : AppConstants.primaryColor));
+        }
       },
     );
   }

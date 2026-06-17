@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "merchants": {
+    "zepto": "Grocery",
+    "blinkit": "Grocery",
+    "swiggy instamart": "Grocery",
+    "rapido": "Transport"
+  }
+}

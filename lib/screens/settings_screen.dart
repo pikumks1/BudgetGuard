@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../services/database_service.dart';
+import 'web_tracker_screen.dart';
+/*import 'package:url_launcher/url_launcher.dart';*/
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -52,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SwitchListTile(
             title: const Text("Show Hidden Transactions", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
             subtitle: const Text("Show hidden records on both Dashboard & All Transactions screens."),
-            activeColor: AppConstants.primaryColor,
+            activeThumbColor: AppConstants.primaryColor,
             value: _showHiddenGlobally,
             onChanged: _toggleSetting,
           ),
@@ -111,6 +114,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
           ),
+          // 4. Web Tracker Option (The Pro Way)
+          ListTile(
+            leading: const Icon(Icons.language, color: AppConstants.primaryColor),
+            title: const Text("Other Web App - Hisab", style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text("Track your expenses manually on seprate diary."),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: () async {
+              try {
+                // YAHAN APNA ASLI WEBPAGE KA LINK DAAL DENA
+                await launchUrl(
+                  Uri.parse('https://pikumks1.github.io/Hisab/'),
+                  customTabsOptions: CustomTabsOptions(
+                    // App ka primary color set kar rahe hain taaki native feel aaye
+                    colorSchemes: CustomTabsColorSchemes.defaults(toolbarColor: AppConstants.primaryColor, navigationBarColor: Colors.white),
+                    // Scroll karte hi URL bar chhup jayega
+                    urlBarHidingEnabled: true,
+                    showTitle: true,
+                    // Cross(X) ki jagah Back arrow aayega
+                    closeButton: CustomTabsCloseButton(icon: CustomTabsCloseButtonIcons.back),
+                  ),
+                  safariVCOptions: SafariViewControllerOptions(preferredBarTintColor: AppConstants.primaryColor, preferredControlTintColor: Colors.white, barCollapsingEnabled: true),
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open tracker."), backgroundColor: Colors.red));
+                }
+              }
+            },
+          ),
+          /*// 4. Hisab-External Link Option
+          ListTile(
+            leading: const Icon(Icons.language, color: AppConstants.primaryColor),
+            title: const Text("Open Web Hisab", style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text("Keep you manual Hisab seprate from app."),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: () async {
+              // YAHAN APNA ASLI WEBPAGE KA LINK DAAL DENA
+              final Uri url = Uri.parse('https://pikumks1.github.io/Hisab/');
+
+              // InAppBrowserView use karne se yeh app ke andar hi khulega
+              if (!await launchUrl(url, mode: LaunchMode.inAppBrowserView)) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open webpage"), backgroundColor: Colors.red));
+                }
+              }
+            },
+          ),*/
         ],
       ),
     );

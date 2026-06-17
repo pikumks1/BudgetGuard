@@ -49,6 +49,13 @@ dart run flutter_native_splash:create
 -- to build apk.
 flutter clean
 flutter pub get
+flutter run
 >>  main command >> flutter build apk --release
 
 >> Path: build/app/outputs/flutter-apk/app-release.apk
+
+
+************
+VS Code mein Ctrl + Shift + P dabaiye (Command Palette khulega).
+Usme type kijiye: Dart: Restart Analysis Server aur Enter daba dijiye. 
+-->> to reset probles error output after file save.
