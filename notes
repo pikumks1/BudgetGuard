@@ -1,0 +1,54 @@
+	-- file map
+    budget_tracker/
+├── android/                  # Native Android specific code
+│   └── app/src/main/kotlin/  # Where the SMS Listener lives (Kotlin)
+├── lib/                      # Your Flutter code
+│   ├── main.dart             # Entry point
+│   ├── models/               # Expense object definitions
+│   ├── services/             # SMS Parser & Database logic
+│   ├── screens/              # UI (Dashboard, Reports)
+│   └── widgets/              # Reusable UI components (Cards, Charts)
+├── assets/                   # Icons and Fonts
+└── pubspec.yaml              # Dependencies (sqflite, fl_chart)
+
+--
+Install:
+java -version >> 17
+Android Studio
+Flutter
+
+Cmd: 
+	flutter --version
+	flutter doctor >> to check installaion
+-------
+Add packages under pubspec.yaml
+    >> under Dependencies
+
+    run >> flutter pub get
+        >> flutter pub upgrade --major-versions
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+
+
+---
+flutter run -d ZD222WDSQF
+
+to generate flutter app icon.
+>> flutter pub run flutter_launcher_icons
+
+to create spalsh screen
+dart run flutter_native_splash:create
+
+-- to build apk.
+flutter clean
+flutter pub get
+>>  main command >> flutter build apk --release
+
+>> Path: build/app/outputs/flutter-apk/app-release.apk

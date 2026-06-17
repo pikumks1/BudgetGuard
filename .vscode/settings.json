@@ -1,0 +1,10 @@
+{
+  "[dart]": {
+    //"editor.defaultFormatter": null,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": false,
+    "editor.formatOnPaste": false
+  },
+  "dart.lineLength": 200,
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
