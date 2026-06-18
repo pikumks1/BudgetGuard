@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+//import 'package:fl_chart/fl_chart.dart';
 import '../constants/app_constants.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -58,7 +58,7 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   Widget build(BuildContext context) {
     List<MapEntry<String, double>> entries = categoryTotals.entries.toList();
-    double maxY = entries.isEmpty ? 10 : entries.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.3;
+    //double maxY = entries.isEmpty ? 10 : entries.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.3;
     const List<String> monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     String formattedMonth = "${monthNames[widget.selectedMonth.month - 1]} ${widget.selectedMonth.year}";
 

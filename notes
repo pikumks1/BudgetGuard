@@ -59,3 +59,9 @@ flutter run
 VS Code mein Ctrl + Shift + P dabaiye (Command Palette khulega).
 Usme type kijiye: Dart: Restart Analysis Server aur Enter daba dijiye. 
 -->> to reset probles error output after file save.
+
+// To install - Dependencies
+flutter pub add http shared_preferences
+
+
+Ctrl + Shift + F >> to search repositry

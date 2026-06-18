@@ -29,7 +29,7 @@ class ExpenseCard extends StatelessWidget {
     DateTime date = DateTime.parse(exp['date']);
     String formattedDate = "${date.day}/${date.month}/${date.year}";
     String category = exp['category'] ?? 'Other';
-    Color catColor = AppConstants.categoryColors[category] ?? Colors.grey;
+    Color catColor = AppConstants.getCategoryColor(category);
     String account = exp['account'] ?? 'Cash/Other';
 
     return Container(
@@ -62,9 +62,12 @@ class ExpenseCard extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min, // Taki extra space na le
             children: [
-              Text(
-                "$category • $formattedDate",
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+              Flexible(
+                child: Text(
+                  "$category • $formattedDate",
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                  overflow: TextOverflow.ellipsis, // Bada hoga toh ... ban jayega
+                ),
               ),
 
               // ---> NAYA LOGIC: DATE KE SATH EYE ICON <---
@@ -78,20 +81,25 @@ class ExpenseCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "${isCredit ? '+' : '-'} ₹${exp['amount']}",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: !isExpense ? Colors.grey.shade400 : (isCredit ? Colors.green : Colors.red)),
+            // ---> AMOUNT KO FITTEDBOX MEIN DAALA <---
+            SizedBox(
+              width: 100, // Maximum width fix kar di
+              child: FittedBox(
+                fit: BoxFit.scaleDown, // Text bada hoga toh khud chhota dikhne lagega
+                alignment: Alignment.centerRight,
+                child: Text(
+                  "${isCredit ? '+' : '-'} ₹${exp['amount']}",
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: !isExpense ? Colors.grey.shade400 : (isCredit ? Colors.green : Colors.red)),
+                ),
+              ),
             ),
+            // ---------------------------------------
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (isEdited)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
-                    child: Icon(Icons.edit_note, color: Colors.orange, size: 16),
-                  ),
+                if (isEdited) ...[const Icon(Icons.edit_note, color: Colors.orange, size: 14), const SizedBox(width: 4)],
 
                 // --- ACCOUNT NAME ADDED HERE ---
                 Text(

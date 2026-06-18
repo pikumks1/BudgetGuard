@@ -5,17 +5,8 @@ class AppConstants {
   static const Color accentColor = Color(0xFFDAA520);
   static const Color bgLight = Color(0xFFF7F9FB);
 
-  // 'final' aur 'const' hata diya taki JSON inko update kar sake
-  static List<String> categories = ['Food', 'Transport', 'Bills', 'Shopping', 'Health', 'Grocery', 'Fruits Vegies', 'Investment', 'Transfer', 'Other'];
-  static List<String> incomeCategories = ['Salary', 'Gift', 'Refund', 'Bonus', 'Other Income'];
-
-  // ---> YEH NAYE MAPS HAIN JO JSON SE BHARENGE <---
-  static Map<String, String> dynamicColors = {};
-  static Map<String, String> dynamicIcons = {};
-
-  // ---> ICON DICTIONARY (Future icons ke liye jo JSON se aayenge) <---
-  static final Map<String, IconData> availableIcons = {'pets': Icons.pets, 'fitness_center': Icons.fitness_center, 'flight': Icons.flight, 'local_movies': Icons.local_movies, 'school': Icons.school, 'work': Icons.work};
-
+  static final List<String> categories = ['Food', 'Transport', 'Bills', 'Shopping', 'Health', 'Grocery', 'Fruits Vegies', 'Investment', 'Transfer', 'Other'];
+  static const List<String> incomeCategories = ['Salary', 'Freelance', 'Refund', 'Bonus', 'Other Income'];
   // ---> UPDATE: Dono cases (Capital & Small) add kiye hain taki color kabhi grey na ho <---
   static final Map<String, Color> categoryColors = {
     'Food': const Color(0xFF4CAF50), 'food': const Color(0xFF4CAF50),
@@ -31,7 +22,7 @@ class AppConstants {
 
     // Income Colors
     'Salary': Colors.green, 'salary': Colors.green,
-    'Gift': Colors.pink, 'gift': Colors.pink,
+    'Freelance': Colors.teal, 'freelance': Colors.teal,
     'Refund': Colors.orange, 'refund': Colors.orange,
     'Bonus': Colors.purple, 'bonus': Colors.purple,
     'Other Income': Colors.blueGrey, 'other income': Colors.blueGrey,
@@ -39,17 +30,7 @@ class AppConstants {
 
   // ---> UPDATE: toLowerCase() lagaya hai taki case ka jhanjhat khatam ho <---
   static IconData getCategoryIcon(String category) {
-    String cleanCategory = category.toLowerCase();
-
-    // 1. Naya logic: Pehle JSON wala icon check karo
-    if (dynamicIcons.containsKey(cleanCategory)) {
-      String iconName = dynamicIcons[cleanCategory]!;
-      if (availableIcons.containsKey(iconName)) {
-        return availableIcons[iconName]!;
-      }
-    }
-
-    switch (cleanCategory) {
+    switch (category.toLowerCase()) {
       case 'food':
         return Icons.restaurant;
       case 'transport':
@@ -71,8 +52,8 @@ class AppConstants {
       // INCOME CATEGORY
       case 'salary':
         return Icons.account_balance_wallet;
-      case 'gift':
-        return Icons.gif_box;
+      case 'freelance':
+        return Icons.laptop_mac;
       case 'refund':
         return Icons.replay;
       case 'bonus':
@@ -85,8 +66,7 @@ class AppConstants {
   }
 
   // Unified Regex/String Keyword Map (Ekdum clean aur readable)
-  // 'final' hata diya taki JSON se naye merchants add ho sakein
-  static Map<String, String> merchantCategoryMap = {
+  static final Map<String, String> merchantCategoryMap = {
     // Food
     'swiggy': 'Food',
     'zomato': 'Food',
@@ -161,22 +141,13 @@ class AppConstants {
     'mandi': 'Fruits Vegies',
   };
 
-  // 'final' hata diya
-  static List<String> knownBanks = ['kotak', 'sbi', 'icici', 'axis', 'hdfc', 'indusind', 'yes bank', 'yesbank', 'pnb', 'onecard', 'one card', 'pluxee', 'paytm'];
-
-  // ---> NAYA: Ignore keywords list <---
-  static List<String> ignoreKeywords = ['due', 'autopay', 'bill', 'generated', 'reminder', 'intimation', 'scheduled', 'will be debited', 'will be deducted', 'auto-debited', 'outstanding', 'statement', 'emi', 'emi of', 'to be paid', 'request received', 'is requested', 'payment of rs.', 'click here'];
+  static final List<String> knownBanks = ['kotak', 'sbi', 'icici', 'axis', 'hdfc', 'indusind', 'yes bank', 'yesbank', 'pnb', 'onecard', 'one card', 'pluxee', 'paytm'];
 
   // ---> COLOR FETCH KARNE KA MASTER FUNCTION <---
   static Color getCategoryColor(String? category) {
     if (category == null || category.trim().isEmpty) return Colors.grey;
 
     String cleanCategory = category.trim();
-
-    // Naya logic: Pehle JSON wala color check karo
-    if (dynamicColors.containsKey(cleanCategory.toLowerCase())) {
-      return Color(int.parse(dynamicColors[cleanCategory.toLowerCase()]!));
-    }
 
     // 1. Direct match check karo
     if (categoryColors.containsKey(cleanCategory)) {

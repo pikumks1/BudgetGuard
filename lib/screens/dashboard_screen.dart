@@ -11,6 +11,7 @@ import 'all_transactions_screen.dart';
 import 'package:flutter/services.dart';
 import 'settings_screen.dart'; // Agar folder alag hai toh path theek kar lena
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/custom_snackbar.dart';
 
 class BudgetDashboard extends StatefulWidget {
   const BudgetDashboard({super.key});
@@ -150,8 +151,7 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
         if (addedCount > 0) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sync complete: $addedCount new records tracked."), backgroundColor: Colors.green));
         } else {
-          // Agar 0 records mile toh yeh orange wala dikhega
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Up to date! No new records found."), backgroundColor: Colors.orange));
+          CustomSnackBar.show(context: context, message: "No records found to sync.");
         }
       }
       // ----------------------------------

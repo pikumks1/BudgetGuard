@@ -78,7 +78,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     if (_searchQuery.isNotEmpty) {
       temp = temp.where((e) {
         final searchLower = _searchQuery.toLowerCase();
-        return (e['merchant'] ?? "").toString().toLowerCase().contains(searchLower) || (e['account'] ?? "").toString().toLowerCase().contains(searchLower) || (e['body'] ?? "").toString().toLowerCase().contains(searchLower);
+        return (e['merchant'] ?? "").toString().toLowerCase().contains(searchLower) || (e['amount'] ?? "").toString().toLowerCase().contains(searchLower) || (e['account'] ?? "").toString().toLowerCase().contains(searchLower) || (e['body'] ?? "").toString().toLowerCase().contains(searchLower);
       }).toList();
     }
     setState(() => _filteredData = temp);

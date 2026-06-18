@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../services/database_service.dart';
-import 'web_tracker_screen.dart';
+//import 'web_tracker_screen.dart';
 /*import 'package:url_launcher/url_launcher.dart';*/
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
 
@@ -15,18 +15,20 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _showHiddenGlobally = false;
-
+  bool _isAppLockEnabled = false;
   @override
   void initState() {
     super.initState();
-    _loadSetting();
+    // Screen khulte hi memory se data nikalne ka order dena hai
+    _loadSettings();
   }
 
-  // SharedPreferences se purani value load karna
-  Future<void> _loadSetting() async {
+  // Memory se read karne wala function
+  Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _showHiddenGlobally = prefs.getBool('show_hidden_globally') ?? false;
+      // Memory se 'app_lock_enabled' ki value uthayega, warna default false dega
+      _isAppLockEnabled = prefs.getBool('app_lock_enabled') ?? false;
     });
   }
 
@@ -161,6 +163,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
           ),*/
+          SwitchListTile(
+            title: const Text("App Lock (Fingerprint/PIN)", style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text("Require authentication to open the app"),
+
+            // UI ka button is variable ke hisaab se switch hoga
+            value: _isAppLockEnabled,
+            activeThumbColor: AppConstants.primaryColor,
+
+            onChanged: (bool value) async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('app_lock_enabled', value);
+
+              if (!context.mounted) return;
+
+              setState(() {
+                _isAppLockEnabled = value;
+              });
+
+              // ---> EKDUM PREMIUM SNACKBAR <---
+              ScaffoldMessenger.of(context).clearSnackBars(); // Purane wale turant hata dega
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(value ? Icons.shield_rounded : Icons.shield_outlined, color: Colors.white, size: 22),
+                      const SizedBox(width: 12),
+                      Text(value ? "Biometric security activated" : "Security lock disabled", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                    ],
+                  ),
+                  backgroundColor: value ? Colors.green.shade700 : Colors.red.shade400,
+                  behavior: SnackBarBehavior.floating, // Screen ke upar float karega
+                  margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20), // Mast spacing
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Rounded corners
+                  duration: const Duration(seconds: 2),
+                  elevation: 6,
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

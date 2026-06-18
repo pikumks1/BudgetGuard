@@ -48,12 +48,19 @@ class SmsParserService {
       }
     }*/
 
-    List<String> ignoreKeywords = ['due', 'bill', 'generated', 'reminder', 'intimation', 'scheduled', 'will be debited', 'will be deducted', 'auto-debited', 'outstanding', 'statement', 'emi', 'emi of', 'to be paid', 'request received', 'is requested', 'payment of rs.', 'click here'];
+    /*List<String> ignoreKeywords = ['due', 'autopay', 'bill', 'generated', 'reminder', 'intimation', 'scheduled', 'will be debited', 'will be deducted', 'auto-debited', 'outstanding', 'statement', 'emi', 'emi of', 'to be paid', 'request received', 'is requested', 'payment of rs.', 'click here'];
 
     for (String word in ignoreKeywords) {
       // Exact word dhoondhne ke liye regex (Punctuation ignore karega)
       if (RegExp(r'\b' + RegExp.escape(word) + r'\b').hasMatch(lowerMsg)) {
         return null;
+      }
+    } */
+
+    for (String word in AppConstants.ignoreKeywords) {
+      // word boundary (\b) ensure karta hai ki 'emi' word mile toh 'premium' ignore na ho
+      if (RegExp(r'\b' + RegExp.escape(word) + r'\b', caseSensitive: false).hasMatch(lowerMsg)) {
+        return null; // Ignore keyword mila, SMS skip kar do
       }
     }
 
@@ -63,7 +70,7 @@ class SmsParserService {
 
     //Amount nikalne ke liye regex, jo ki Rs. 500, INR 500, ₹500, Rs500, etc. formats ko handle karega
     double amount = 0.0;
-    RegExp amountRegExp = RegExp(r"(?:rs\.?|inr|₹)\s*([0-9,]+(?:\.[0-9]+)?)");
+    RegExp amountRegExp = RegExp(r"(?:rs[.:]?|inr[.:]?|₹[.:]?)\s*([0-9,]+(?:\.[0-9]+)?)");
     var amountMatch = amountRegExp.firstMatch(lowerMsg);
     if (amountMatch != null) amount = double.tryParse(amountMatch.group(1)!.replaceAll(',', '')) ?? 0.0;
 
@@ -77,7 +84,7 @@ class SmsParserService {
       } else {
         type = 'Credit';
       }
-    } else if (lowerMsg.contains('debited') || lowerMsg.contains('deducted') || lowerMsg.contains('paid') || lowerMsg.contains('sent') || lowerMsg.contains('spent') || lowerMsg.contains('txn') || lowerMsg.contains('transaction') || lowerMsg.contains('payment') || lowerMsg.contains('purchase') || lowerMsg.contains('withdrawn') || lowerMsg.contains('used') || lowerMsg.contains('withdraw') || lowerMsg.contains('transfer to')) {
+    } else if (lowerMsg.contains('debited') || lowerMsg.contains('deducted') || lowerMsg.contains('paid') || lowerMsg.contains('sent') || lowerMsg.contains('spent') || lowerMsg.contains('txn') || lowerMsg.contains('transaction') || lowerMsg.contains('payment') || lowerMsg.contains('purchase') || lowerMsg.contains('withdrawn') || lowerMsg.contains('used') || lowerMsg.contains('withdraw')) {
       type = 'Debit';
     }
 
@@ -99,7 +106,7 @@ class SmsParserService {
     if (accMatch != null) accountInfo = "$bankName ${accMatch.group(1)}";
 
     // Merchant name nikalne ke liye thoda complex regex use karenge, jo ki "to", "at", "VPA", "Info", "paid to" jaise words ke baad aane wale text ko capture karega
-    String merchant = 'Unknown';
+    /* String merchant = 'Unknown';
     //RegExp merchantRegExp = RegExp(r"(?:to|at|VPA|Info|paid to)\s+([a-zA-Z0-9\s\.\@\-\_]+?)(?:\s+(?:on|via|Ref|UPI|from|by|card|balance))", caseSensitive: false);
     RegExp merchantRegExp = RegExp(r"(?:to|at|VPA|Info|paid to|towards)\s+([a-zA-Z0-9\s\@\-\_]+?)(?:\s+(?:on|via|Ref|UPI|from|by|card|balance)|\.|$)", caseSensitive: false);
     var merchantMatch = merchantRegExp.firstMatch(message);
@@ -108,8 +115,41 @@ class SmsParserService {
       merchant = merchantMatch.group(1)!.trim();
     } else {
       merchant = 'General Expense';
+    } */
+
+    String merchant = 'Unknown';
+    String lowerType = type.toLowerCase(); // 'debit' ya 'credit'
+
+    if (lowerType == 'debit') {
+      // Aapka purana Debit wala logic
+      RegExp debitRegExp = RegExp(r"(?:to|at|VPA|Info|paid to|towards)\s+([a-zA-Z0-9\s\@\-\_]+?)(?:\s+(?:on|via|Ref|UPI|from|by|card|balance|\.|$))", caseSensitive: false);
+      var match = debitRegExp.firstMatch(message);
+      if (match != null && match.group(1) != null) {
+        merchant = match.group(1)!.trim();
+      }
+    } else if (lowerType == 'credit') {
+      // NAYA: Credit wala logic ("from" aur "by" ko pakdega)
+      RegExp creditRegExp = RegExp(r"(?:from|by|received from|credited by)\s+(.+?)(?=\s+(?:on|via|Ref|UPI|to|Bal|balance)|\.|$)", caseSensitive: false);
+      var match = creditRegExp.firstMatch(message);
+      if (match != null && match.group(1) != null) {
+        merchant = match.group(1)!.trim();
+      }
     }
 
+    // Agar koi naam nahi mila toh default set kar do
+    if (merchant == 'Unknown' || merchant.isEmpty) {
+      merchant = lowerType == 'credit' ? 'General Income' : 'General Expense';
+    }
+
+    // Faltu words (upi, imps, neft) aur slashes ko saaf karne ka logic
+    if (merchant.length > 3) {
+      merchant = merchant.replaceAll(RegExp(r'(upi|imps|neft|rtgs|/|-)', caseSensitive: false), " ").trim();
+
+      // Agar multiple spaces aa gaye ho toh unhe single space bana do
+      merchant = merchant.replaceAll(RegExp(r'\s+'), ' ');
+    }
+
+    // upi merchant name ko aur clean karne ke liye agar 'upi' word hai aur length 5 se zyada hai toh usko hata do
     if (merchant.toLowerCase().contains('upi') && merchant.length > 5) {
       merchant = merchant.replaceAll(RegExp(r'upi', caseSensitive: false), "").trim();
     }
@@ -181,8 +221,21 @@ class SmsParserService {
       isExpenseFlag = 0;
     }
 
+    if (category == 'Other' && type == 'Credit') {
+      category = 'Other Income';
+      if (lowerMsg.contains('salary') || lowerMsg.contains('payroll') || lowerMsg.contains('ctc')) {
+        category = 'Salary';
+      } else if (lowerMsg.contains('bonus') || lowerMsg.contains('incentive')) {
+        category = 'Bonus';
+      } else if (lowerMsg.contains('refund') || lowerMsg.contains('rebate')) {
+        category = 'Refund';
+      } else if (lowerMsg.contains('gift') || lowerMsg.contains('donation')) {
+        category = 'Gift';
+      }
+    }
+
     String lowerMerchant = merchant.toLowerCase();
-    String lowerType = type.toLowerCase();
+    //String lowerType = type.toLowerCase();
     String lowerAccount = accountInfo.toLowerCase();
 
     // SQL 'LIKE' jaisa behavior: Agar string ke andar yeh words kahin bhi hain

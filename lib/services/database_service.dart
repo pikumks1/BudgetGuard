@@ -53,9 +53,15 @@ class DatabaseHelper {
     }
   }
 
+  // mark expense/income as edited when toggling is_expense
   Future<int> toggleExpenseStatus(int id, int isExpense) async {
     final db = await instance.database;
-    return await db.update('expenses', {'is_expense': isExpense}, where: 'id = ?', whereArgs: [id]);
+    return await db.update(
+      'expenses', // Table name
+      {'is_expense': isExpense, 'is_edited': 1}, // columns to update
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<int> updateTransactionDetails(int id, String merchant, String category, int isEdited) async {
@@ -82,17 +88,14 @@ class DatabaseHelper {
     final db = await instance.database;
     Map<String, dynamic> insertRow = Map<String, dynamic>.from(row);
 
-    // EXACT MATCH CHECK: Agar pura SMS (body) aur time same hai toh insert hi mat karo
+    // EXACT MATCH CHECK: Pure SMS body aur date same hone pe skip
     final List<Map<String, dynamic>> exactMatch = await db.query('expenses', where: 'body = ? AND date = ?', whereArgs: [insertRow['body'], insertRow['date']]);
     if (exactMatch.isNotEmpty) return 0;
 
     if (insertRow['date'] != null && insertRow['amount'] != null) {
       DateTime newDate = DateTime.parse(insertRow['date']);
-
-      // Amount ko proper double mein convert karna
       double newAmt = (insertRow['amount'] is int) ? (insertRow['amount'] as int).toDouble() : insertRow['amount'] as double;
 
-      // Aaj ka filter hata diya, ab sirf EXACT Amount dhoondhenge (Fast & Cross-day support)
       final List<Map<String, dynamic>> existing = await db.query('expenses', where: 'amount = ?', whereArgs: [newAmt]);
 
       bool isDuplicate = false;
@@ -102,48 +105,40 @@ class DatabaseHelper {
         if (oldExp['type'] == insertRow['type']) {
           String oldRef = (oldExp['ref_number'] ?? '').toString().trim();
 
-          // TIER 1: Reference Number Match (Sabse solid)
-          if (newRef.isNotEmpty && oldRef.isNotEmpty) {
-            if (newRef == oldRef) {
-              isDuplicate = true;
-              break;
-            } else {
-              continue; // Ref alag hai toh pakka alag kharcha hai
-            }
-          }
-
-          // Dates compare karne ke liye gap nikalo
           DateTime oldDate = DateTime.parse(oldExp['date']);
           int diffMinutes = newDate.difference(oldDate).inMinutes.abs();
           int diffHours = newDate.difference(oldDate).inHours.abs();
 
-          // TIER 2: Normal 5-Minute Rule (Chhote ya bade kisi bhi amount ke liye)
-          if (diffMinutes <= 5) {
+          // TIER 1: Exact Reference Match (Agar directly match ho gaya)
+          if (newRef.isNotEmpty && oldRef.isNotEmpty && newRef == oldRef) {
             isDuplicate = true;
             break;
           }
 
-          // TIER 3: NAYA SMART DECIMAL LOGIC (Bade Bills ke liye)
-          // newAmt % 1 != 0 ka matlab hai ki decimal ke baad kuch number hai (e.g. 1000.50 % 1 = 0.50)
-          bool hasDecimal = (newAmt % 1 != 0);
+          // TIER 2: 5-Minute Rule (Chahe ref num alag ho, ya ek me na ho)
+          // ---> YAHAN FIX HUA HAI (continue hata diya) <---
+          if (diffMinutes <= 5 && insertRow['payMode'] != 'UPI') {
+            isDuplicate = true;
+            break;
+          }
 
-          // Agar amount > 1000 hai, decimal hai, aur pichle 24 ghante ke andar same bill aaya hai
-          if (newAmt > 1000 && hasDecimal && diffHours <= 24) {
+          // TIER 3: SMART DECIMAL LOGIC
+          bool hasDecimal = (newAmt % 1 != 0);
+          if (newAmt > 200 && hasDecimal && diffHours <= 24) {
             isDuplicate = true;
             break;
           }
         }
       }
 
-      // Agar duplicate nikla toh is_expense = 0 kar do (Total mein nahi judega)
-      if (isDuplicate) insertRow['is_expense'] = 0;
+      if (isDuplicate) {
+        //return 0; // Agar duplicate mila toh insert na karo
+        insertRow['is_expense'] = 0; // Duplicate ko ignore list me daal do
+      }
 
-      // ---> NAYA LOGIC: DEFAULT UNHIDDEN INSERT <---
-      // Agar row map mein is_hidden nahi aaya hai, toh by default 0 (visible) set kar do
       if (!insertRow.containsKey('is_hidden')) {
         insertRow['is_hidden'] = 0;
       }
-      // ---------------------------------------------
     }
 
     return await db.insert('expenses', insertRow);
