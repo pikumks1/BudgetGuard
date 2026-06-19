@@ -1,4 +1,4 @@
-package com.example.budget_track
+package com.pikumks.budgetguard
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

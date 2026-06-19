@@ -65,3 +65,7 @@ flutter pub add http shared_preferences
 
 
 Ctrl + Shift + F >> to search repositry
+
+
+--
+dart run change_app_package_name:main com.pikumks.budgetguard  >> change applicationId of app: Package name

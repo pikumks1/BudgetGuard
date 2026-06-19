@@ -116,6 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
           ),
+          /*
           // 4. Web Tracker Option (The Pro Way)
           ListTile(
             leading: const Icon(Icons.language, color: AppConstants.primaryColor),
@@ -144,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               }
             },
-          ),
+          ), */
           /*// 4. Hisab-External Link Option
           ListTile(
             leading: const Icon(Icons.language, color: AppConstants.primaryColor),
