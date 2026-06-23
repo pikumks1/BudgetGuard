@@ -1,9 +1,407 @@
 {
   "version": 1,
-  "merchants": {
-    "zepto": "Grocery",
-    "blinkit": "Grocery",
-    "swiggy instamart": "Grocery",
-    "rapido": "Transport"
+  "ignoreKeywords": [
+  // 1. Dues, Bills & Reminders
+  "due", "dues", "overdue", "autopay", "bill", "generated", "reminder", "intimation", 
+  "scheduled", "will be debited", "will be deducted", "auto-debited", "outstanding", 
+  "statement", "emi", "emi of", "to be paid", "request received", "is requested", 
+  "payment of rs.", "click here", "loan", "repayment", "please deposit", "to be deposited", 
+  "bounce", "failed", "minimum amount", "minimum due", 
+  
+  // 2. OD, FD & Limits
+  "overdraft", "od a/c", "od acct", "od account", "matured", "maturity", "maturing", 
+  "interest payout", "fd interest", "low balance", "minimum balance", "maintain balance", 
+  "below minimum", "transaction limit", "cooling period",
+  
+  // 3. Failed, Blocked & Promo
+  "pre-approved", "eligible for", "avail loan", "declined", "insufficient funds", 
+  "transaction failed", "unsuccessful", "reward points", "cashback points", 
+  "will be levied", "maintenance charges", "subject to clearing", "cheque book", 
+  "cheque returned", "cheque clearing", "mandate registered", "sip registered", 
+  "mandate modified", "sip setup", "beneficiary added", "login alert", "password changed", 
+  "pin generated", "mpin", "limit enhanced", "card dispatched", "card blocked", 
+  "temporary block", "lien marked", "amount blocked", "hold marked",
+  
+  // 4. Edge Cases (Fastag, Stocks, Requests, Refunds)
+  "fastag balance is low", "recharge fastag", "insufficient fastag", "margin shortfall", 
+  "margin required", "allotment of shares", "up to rs", "scratch card", "win cash", 
+  "claim bonus", "refund initiated", "will reflect", "refund requested", "premium due", 
+  "grace period", "tds certificate", "has requested", "payment request", "total amount due", 
+  "min amount due", "statement generated", "add money"
+  ],
+"knownBanks": [
+    // Existing & Major Private
+    "kotak", "sbi", "icici", "axis", "hdfc", "indusind", "yes bank", "yesbank", "pnb", "onecard", "one card", "pluxee", "paytm",
+    // Major PSU Banks
+    "bob", "bank of baroda", "boi", "bank of india", "union bank", "ubi", "canara bank", "canara", "central bank", "cbi", "indian bank", "iob", "indian overseas bank", "punjab national bank", "bank of maharashtra", "bom", "punjab and sind bank", "psb", "uco bank", "uco",
+    // Other Private Banks
+    "idbi", "idbi bank", "bandhan", "bandhan bank", "csb", "csb bank", "city union", "city union bank", "cub", "dcb", "dcb bank", "dhanlaxmi", "dhanlaxmi bank", "federal bank", "federal", "j&k bank", "jammu and kashmir bank", "karnataka bank", "karnataka", "karur vysya", "kvb", "nainital bank", "rbl", "rbl bank", "south indian bank", "sib", "tamilnad mercantile", "tmb",
+    // Small Finance Banks
+    "au small finance", "au bank", "capital small finance", "equitas", "equitas bank", "esaf", "fincare", "janalakshmi", "jana bank", "north east small finance", "shivalik", "suryoday", "ujjivan", "utkarsh",
+    // Payments Banks
+    "airtel payment bank", "india post", "ippb", "fino", "jio payment", "nsdl",
+    // Foreign Banks in India
+    "sbm", "sbm bank", "dbs", "dbs bank", "citi", "citibank", "standard chartered", "stanchart", "hsbc", "barclays", "deutsche bank", "jp morgan", "bnp paribas",
+    // Major Co-operative Banks
+    "abhyudaya", "bassein catholic", "cosmos bank", "kalupur", "saraswat", "saraswat bank", "shamrao vithal", "svc bank", "tjsb",
+    // Neobanks, Fintechs & Credit Lines (Very common in SMS)
+    "bharatpe", "postpe", "slice", "uni card", "lazypay", "simpl", "zestmoney", "fi money", "jupiter", "niyo", "epifi", "fampay", "mobikwik", "freecharge", "cred", "amazon pay", "gpay", "phonepe"
+  ],
+ "merchantCategoryMap": {
+  // ==========================================
+  // 🍔 FOOD & DINING (~180)
+  // ==========================================
+  "swiggy":"Food", "zomato":"Food", "mcdonald":"Food", "mcdonalds":"Food", "kfc":"Food", "burger king":"Food", 
+  "subway":"Food", "dominos":"Food", "domino":"Food", "pizza hut":"Food", "haldiram":"Food", "bikanervala":"Food", 
+  "bikanervalas":"Food", "om sweets":"Food", "chaayos":"Food", "chai point":"Food", "starbucks":"Food", "barista":"Food", 
+  "third wave":"Food", "costa coffee":"Food", "blue tokai":"Food", "faasos":"Food", "behrouz":"Food", "oven story":"Food", 
+  "eatclub":"Food", "lunchbox":"Food", "wow momo":"Food", "wow china":"Food", "taco bell":"Food", "barbeque nation":"Food", 
+  "mainland china":"Food", "social":"Food", "imperfecto":"Food", "bakingo":"Food", "theobroma":"Food", "smoor":"Food", 
+  "burger singh":"Food", "biryani by kilo":"Food", "paradise biryani":"Food", "meghana foods":"Food", "keventers":"Food", 
+  "giani":"Food", "gianis":"Food", "naturals ice cream":"Food", "baskin robbins":"Food", "mad over donuts":"Food", 
+  "dunkin":"Food", "mojo pizza":"Food", "firangi bake":"Food", "sweet truth":"Food", "cyber hub":"Food", "eat":"Food", 
+  "restaurant":"Food", "cafe":"Food", "bakery":"Food", "wendys":"Food", "nandos":"Food", "krispy kreme":"Food", 
+  "pita pit":"Food", "chilis":"Food", "truffles":"Food", "leon grill":"Food", "empire restaurant":"Food", 
+  "thalappakatti":"Food", "nic natural":"Food", "frozen bottle":"Food", "rollapp":"Food", "rolls king":"Food", 
+  "rajdhani":"Food", "sigree":"Food", "punjabi by nature":"Food", "pindi":"Food", "kake da hotel":"Food", "gulatis":"Food", 
+  "anands":"Food", "burger point":"Food", "lapinoz":"Food", "belgian waffle":"Food", "waffle co":"Food", "ccd":"Food", 
+  "cafe coffee day":"Food", "kannu ki chai":"Food", "chai thela":"Food", "amrik sukhdev":"Food", "garam dharam":"Food",
+  "baba ka dhaba":"Food", "murthal":"Food", "absolute barbeques":"Food", "ab's":"Food", "pirates of grill":"Food", 
+  "smoke house deli":"Food", "mocha":"Food", "hard rock cafe":"Food", "irish house":"Food", "beer cafe":"Food", 
+  "kfc india":"Food", "moti mahal":"Food", "nazeer":"Food", "karims":"Food", "bercos":"Food", "mamagoto":"Food", 
+  "yauatcha":"Food", "pa pa ya":"Food", "farzi cafe":"Food", "dhaba estd":"Food", "copper chimney":"Food", 
+  "bombay brasserie":"Food", "punjab grill":"Food", "kailash parbat":"Food", "shiv sagar":"Food", "sagar ratna":"Food", 
+  "saravana bhavan":"Food", "adigas":"Food", "mtr":"Food", "vidyarthi bhavan":"Food", "haldiram's":"Food", "kanti sweets":"Food",
+  "anand sweets":"Food", "banchharam":"Food", "kc das":"Food", "flurys":"Food", "peter cat":"Food", "arsalan":"Food", 
+  "tunday kababi":"Food", "ram asrey":"Food", "chhappan bhog":"Food", "bikanervala foods":"Food", "gopal sweets":"Food", 
+  "gopals":"Food", "novelty sweets":"Food", "lovely bake studio":"Food", "nik bakers":"Food", "french crust":"Food",
+  "dutch oven":"Food", "cakerie":"Food", "mrcake":"Food", "ribbons and balloons":"Food", "monginis":"Food", "mio amore":"Food",
+  "merwans":"Food", "kaka halwai":"Food", "chitale bandhu":"Food", "kayani bakery":"Food", "shrewsbury":"Food", "vada pav":"Food",
+  "goli vada pav":"Food", "jumboking":"Food", "mba chai wala":"Food", "chai calling":"Food", "teapost":"Food", "tea time":"Food",
+
+  // ==========================================
+  // 🛒 GROCERY, FMCG & DAILY NEEDS (~150)
+  // ==========================================
+  "blinkit":"Grocery", "zepto":"Grocery", "bbnow":"Grocery", "bigbasket":"Grocery", "big basket":"Grocery", "dmart":"Grocery", 
+  "reliance fresh":"Grocery", "reliance smart":"Grocery", "smart bazaar":"Grocery", "instamart":"Grocery", "jiomart":"Grocery", 
+  "jio mart":"Grocery", "milkbasket":"Grocery", "country delight":"Grocery", "licious":"Grocery", "freshtohome":"Grocery", 
+  "meatigo":"Grocery", "tendercuts":"Grocery", "dunzo":"Grocery", "bbdaily":"Grocery", "amazon fresh":"Grocery", 
+  "flipkart grocery":"Grocery", "easyday":"Grocery", "spencers":"Grocery", "nature basket":"Grocery", "modern bazaar":"Grocery", 
+  "le marche":"Grocery", "24 seven":"Grocery", "patanjali":"Grocery", "apna mart":"Grocery", "supermarket":"Grocery", 
+  "grocery":"Grocery", "kirana":"Grocery", "departmental store":"Grocery", "general store":"Grocery", "more retail":"Grocery", 
+  "star bazaar":"Grocery", "ratnadeep":"Grocery", "vijetha":"Grocery", "heritage fresh":"Grocery", "supr daily":"Grocery", 
+  "bblite":"Grocery", "swiggy instamart":"Grocery", "zepto cafe":"Grocery", "amul":"Grocery", "mother dairy":"Grocery", 
+  "safal":"Grocery", "nandini":"Grocery", "sudha dairy":"Grocery", "saras dairy":"Grocery", "vita dairy":"Grocery", 
+  "verka":"Grocery", "aavin":"Grocery", "milma":"Grocery", "heritage foods":"Grocery", "jersey":"Grocery", "gowardhan":"Grocery", 
+  "parag":"Grocery", "namdhari":"Grocery", "foodhall":"Grocery", "gourmet":"Grocery", "wellness forever":"Grocery", 
+  "maggi":"Grocery", "nestle":"Grocery", "britannia":"Grocery", "parle":"Grocery", "itc":"Grocery", "aashirvaad":"Grocery", 
+  "fortune":"Grocery", "safola":"Grocery", "tata sampann":"Grocery", "daawat":"Grocery", "india gate":"Grocery", "mdh":"Grocery", 
+  "everest":"Grocery", "catch spices":"Grocery", "suhana":"Grocery", "ramdev":"Grocery", "nilon's":"Grocery", "mother's recipe":"Grocery", 
+  "haldirams bhujiawala":"Grocery", "balaji wafers":"Grocery", "bikaji":"Grocery", "prabhuji":"Grocery", "yellow diamond":"Grocery", 
+  "pepsi":"Grocery", "coca cola":"Grocery", "bisleri":"Grocery", "kinley":"Grocery", "aquafina":"Grocery", "bailey":"Grocery", 
+  "paper boat":"Grocery", "raw pressery":"Grocery", "b natural":"Grocery", "tropicana":"Grocery", "real juice":"Grocery", 
+  "red bull":"Grocery", "monster energy":"Grocery", "sting":"Grocery", "hell energy":"Grocery", "cadbury":"Grocery", 
+  "ferrero":"Grocery", "hershey":"Grocery", "amul choco":"Grocery", "mars":"Grocery", "snickers":"Grocery", "bounty":"Grocery", 
+  "kinder":"Grocery", "perfetti":"Grocery", "mentos":"Grocery", "center fruit":"Grocery", "center fresh":"Grocery", "happydent":"Grocery", 
+  "himalaya wellness":"Grocery", "dabur":"Grocery", "baidyanath":"Grocery", "zandu":"Grocery", "vicco":"Grocery", "colgate":"Grocery", 
+  "pepsodent":"Grocery", "sensodyne":"Grocery", "oral-b":"Grocery", "close up":"Grocery", "patanjali dant kanti":"Grocery", 
+  "hll":"Grocery", "hul":"Grocery", "unilever":"Grocery", "p&g":"Grocery", "procter and gamble":"Grocery", "godrej consumer":"Grocery", 
+  "marico":"Grocery", "emami":"Grocery", "reckitt":"Grocery", "jyothy labs":"Grocery", "cavinkare":"Grocery", "wipro consumer":"Grocery", 
+
+  // ==========================================
+  // 🛍️ SHOPPING, LIFESTYLE, D2C & RETAIL (~250)
+  // ==========================================
+  "amazon":"Shopping", "flipkart":"Shopping", "myntra":"Shopping", "meesho":"Shopping", "ajio":"Shopping", "nykaa":"Shopping", 
+  "tata cliq":"Shopping", "shoppers stop":"Shopping", "lifestyle":"Shopping", "pantaloons":"Shopping", "westside":"Shopping", 
+  "zara":"Shopping", "h&m":"Shopping", "reliance trends":"Shopping", "max fashion":"Shopping", "v-mart":"Shopping", 
+  "vishal mega mart":"Shopping", "decathlon":"Shopping", "croma":"Shopping", "reliance digital":"Shopping", "vijay sales":"Shopping", 
+  "ikea":"Shopping", "home centre":"Shopping", "pepperfry":"Shopping", "urban ladder":"Shopping", "lenskart":"Shopping", 
+  "firstcry":"Shopping", "tanishq":"Shopping", "kalyan jewellers":"Shopping", "malabar":"Shopping", "caratlane":"Shopping", 
+  "pc jeweller":"Shopping", "bata":"Shopping", "metro shoes":"Shopping", "puma":"Shopping", "adidas":"Shopping", "nike":"Shopping", 
+  "skechers":"Shopping", "apple store":"Shopping", "imagine store":"Shopping", "samsung":"Shopping", "miniso":"Shopping", 
+  "mall":"Shopping", "mamaearth":"Shopping", "mcaffeine":"Shopping", "sugar cosmetics":"Shopping", "plum goodness":"Shopping", 
+  "wow skin":"Shopping", "boat":"Shopping", "noise":"Shopping", "fireboltt":"Shopping", "bewakoof":"Shopping", 
+  "souled store":"Shopping", "snitch":"Shopping", "marks and spencer":"Shopping", "fabindia":"Shopping", "himalaya":"Shopping", 
+  "purplle":"Shopping", "myglamm":"Shopping", "swiss beauty":"Shopping", "under armour":"Shopping", "reebok":"Shopping", 
+  "asics":"Shopping", "woodland":"Shopping", "red tape":"Shopping", "campus":"Shopping", "sparx":"Shopping", "khadim":"Shopping", 
+  "liberty":"Shopping", "sreeleathers":"Shopping", "mchi":"Shopping", "rayban":"Shopping", "fastrack":"Shopping", "titan":"Shopping", 
+  "casio":"Shopping", "fossil":"Shopping", "gshock":"Shopping", "lifestylestores":"Shopping", "reliancejewels":"Shopping", 
+  "joyalukkas":"Shopping", "bhima":"Shopping", "tbz":"Shopping", "kiranajewellers":"Shopping", "senco":"Shopping", 
+  "mia by tanishq":"Shopping", "bluestone":"Shopping", "giva":"Shopping", "melorra":"Shopping", "voylla":"Shopping", 
+  "pebbles":"Shopping", "portronics":"Shopping", "mivi":"Shopping", "zebronics":"Shopping", "ambrane":"Shopping", "syska":"Shopping", 
+  "philips":"Shopping", "panasonic":"Shopping", "lg electronics":"Shopping", "sony":"Shopping", "bose":"Shopping", "jbl":"Shopping", 
+  "harman":"Shopping", "sennheiser":"Shopping", "oneplus":"Shopping", "xiaomi":"Shopping", "mi store":"Shopping", "realme":"Shopping", 
+  "oppo":"Shopping", "vivo":"Shopping", "poco":"Shopping", "iqoo":"Shopping", "motorola":"Shopping", "nokia":"Shopping", "asus":"Shopping", 
+  "lenovo":"Shopping", "hp world":"Shopping", "dell exclusive":"Shopping", "acer":"Shopping", "logitech":"Shopping", "croma retail":"Shopping", 
+  "sangeetha mobiles":"Shopping", "poorvika":"Shopping", "lot mobiles":"Shopping", "big c":"Shopping", "bajaj electronics":"Shopping", 
+  "girias":"Shopping", "viveks":"Shopping", "vasanth and co":"Shopping", "khosla electronics":"Shopping", "great eastern":"Shopping", 
+  "kohinoor":"Shopping", "vijay sales":"Shopping", "hometown":"Shopping", "at home":"Shopping", "nilkamal":"Shopping", 
+  "godrej interio":"Shopping", "sleepwell":"Shopping", "kurlon":"Shopping", "wakefit":"Shopping", "sleepycat":"Shopping", 
+  "duroflex":"Shopping", "sunday mattress":"Shopping", "bombay dyeing":"Shopping", "spaces":"Shopping", "portico":"Shopping", 
+  "d'decor":"Shopping", "welspun":"Shopping", "maspar":"Shopping", "chumbak":"Shopping", "daily objects":"Shopping", "propshop24":"Shopping", 
+  "the messi store":"Shopping", "wrogn":"Shopping", "hrx":"Shopping", "cultsport":"Shopping", "zudio":"Shopping", "fbb":"Shopping", 
+  "globus":"Shopping", "shoppersstop":"Shopping", "centro":"Shopping", "soch":"Shopping", "biba":"Shopping", "w for woman":"Shopping", 
+  "aurelia":"Shopping", "global desi":"Shopping", "and":"Shopping", "madame":"Shopping", "allen solly":"Shopping", "peter england":"Shopping", 
+  "van heusen":"Shopping", "louis philippe":"Shopping", "arrow":"Shopping", "raymond":"Shopping", "park avenue":"Shopping", "colorplus":"Shopping", 
+  "mufti":"Shopping", "spykar":"Shopping", "flying machine":"Shopping", "pepe jeans":"Shopping", "levis":"Shopping", "wrangler":"Shopping", 
+  "lee":"Shopping", "u.s. polo":"Shopping", "tommy hilfiger":"Shopping", "calvin klein":"Shopping", "nautica":"Shopping", "gant":"Shopping", 
+  "rare rabbit":"Shopping", "superdry":"Shopping", "jack & jones":"Shopping", "vero moda":"Shopping", "only":"Shopping", "forever 21":"Shopping", 
+  "bestseller":"Shopping", "mothercare":"Shopping", "me n moms":"Shopping", "hopscotch":"Shopping", "hamleys":"Shopping", "toys r us":"Shopping", 
+  "crossword":"Shopping", "landmark":"Shopping", "sapna book house":"Shopping", "odyssey":"Shopping", "om book shop":"Shopping",
+
+  // ==========================================
+  // 💡 BILLS, UTILITIES & SERVICES (~150)
+  // ==========================================
+  "airtel":"Bills", "jio":"Bills", "vi":"Bills", "vodafone":"Bills", "bsnl":"Bills", "mtnl":"Bills", "cred":"Bills", "paytm":"Bills", 
+  "phonepe":"Bills", "freecharge":"Bills", "mobikwik":"Bills", "billdesk":"Bills", "razorpay":"Bills", "ccavenue":"Bills", "payu":"Bills", 
+  "juspay":"Bills", "cashfree":"Bills", "instamojo":"Bills", "easebuzz":"Bills", "paytm post":"Bills", "amazon pay":"Bills", 
+  "google pay":"Bills", "gpay":"Bills", "bharatpe":"Bills", "pine labs":"Bills", "mpos":"Bills", "ezetap":"Bills", "mosambee":"Bills", 
+  "dhbvn":"Bills", "uhbvn":"Bills", "bescom":"Bills", "tata power":"Bills", "bses":"Bills", "igl":"Bills", "mahanagar gas":"Bills", 
+  "adani gas":"Bills", "tata sky":"Bills", "tata play":"Bills", "d2h":"Bills", "dish tv":"Bills", "excitel":"Bills", "act fibernet":"Bills", 
+  "jiofiber":"Bills", "hathway":"Bills", "spectra":"Bills", "mcg":"Bills", "water bill":"Bills", "electricity":"Bills", "recharge":"Bills", 
+  "postpaid":"Bills", "broadband":"Bills", "mygate":"Bills", "nobroker":"Bills", "urban company":"Bills", "urbanclap":"Bills", 
+  "housejoy":"Bills", "mseb":"Bills", "tsspdcl":"Bills", "apcpdcl":"Bills", "kseb":"Bills", "gujarat gas":"Bills", "gail":"Bills", 
+  "bharat gas":"Bills", "indane":"Bills", "hp gas":"Bills", "reliance gas":"Bills", "torrent power":"Bills", "cesc":"Bills", "wbSEDCL":"Bills", 
+  "upPCL":"Bills", "pspCL":"Bills", "jdvvnl":"Bills", "avvnl":"Bills", "jvvnl":"Bills", "mpkvvcl":"Bills", "mpez":"Bills", "cspdcl":"Bills", 
+  "optcl":"Bills", "gescom":"Bills", "hescom":"Bills", "mescom":"Bills", "tneb":"Bills", "tangedco":"Bills", "ksedcl":"Bills", 
+  "goa electricity":"Bills", "delhi jal board":"Bills", "bwssb":"Bills", "hmwssb":"Bills", "cMWSSB":"Bills", "pune rmc":"Bills", "bmc":"Bills", 
+  "kMC":"Bills", "gHMC":"Bills", "bbmp":"Bills", "ndmc":"Bills", "mcd":"Bills", "sdmc":"Bills", "edmc":"Bills", "sun direct":"Bills", 
+  "asianet":"Bills", "den networks":"Bills", "siti cable":"Bills", "fastway":"Bills", "gtpl":"Bills", "kerala vision":"Bills", "nxt digital":"Bills", 
+  "tikona":"Bills", "you broadband":"Bills", "cherrie":"Bills", "ion internet":"Bills", "gazon":"Bills", "alliance broadband":"Bills", 
+  "wishnet":"Bills", "meghbela":"Bills", "sify":"Bills", "railwire":"Bills", "bsnl fiber":"Bills", "v-fiber":"Bills", "airtel xstream":"Bills", 
+  "jio link":"Bills", "magicbricks":"Bills", "housing.com":"Bills", "99acres":"Bills", "nestaway":"Bills", "zolostays":"Bills", 
+  "stanza living":"Bills", "colive":"Bills", "oyolife":"Bills", "coho":"Bills", "commscope":"Bills", "apna complex":"Bills", "adda":"Bills", 
+  "society tea":"Bills", "commonfloor":"Bills", "no broker hood":"Bills", "furlenco":"Bills", "rentomojo":"Bills", "cityfurnish":"Bills", 
+
+  // ==========================================
+  // 📈 INVESTMENT, INSURANCE & FINANCE (~150)
+  // ==========================================
+  "zerodha":"Investment", "groww":"Investment", "upstox":"Investment", "angel one":"Investment", "indmoney":"Investment", "kuvera":"Investment", 
+  "etmoney":"Investment", "paytm money":"Investment", "5paisa":"Investment", "icici direct":"Investment", "hdfc securities":"Investment", 
+  "kotak securities":"Investment", "motilal oswal":"Investment", "sharekhan":"Investment", "sbi securities":"Investment", "scripbox":"Investment", 
+  "smallcase":"Investment", "wazirx":"Investment", "coindcx":"Investment", "binance":"Investment", "lic":"Investment", "policybazaar":"Investment", 
+  "epfo":"Investment", "bajaj finance":"Investment", "muthoot":"Investment", "mutual fund":"Investment", "sip":"Investment", "etf":"Investment", 
+  "nach":"Investment", "nps":"Investment", "ppf":"Investment", "sbi mf":"Investment", "hdfc mf":"Investment", "icici pru":"Investment", 
+  "axis mf":"Investment", "nippon":"Investment", "uti mf":"Investment", "mirae":"Investment", "kotak mf":"Investment", "dsp mf":"Investment", 
+  "tata mf":"Investment", "navi":"Investment", "ditto":"Investment", "acko":"Investment", "godigit":"Investment", "star health":"Investment", 
+  "hdfc ergo":"Investment", "icici lombard":"Investment", "sbi life":"Investment", "max life":"Investment", "bajaj allianz":"Investment", 
+  "tata aia":"Investment", "pnb metlife":"Investment", "aditya birla sun life":"Investment", "canara robeco":"Investment", "franklin templeton":"Investment", 
+  "invesco":"Investment", "lic mutual fund":"Investment", "sundaram":"Investment", "motilal mf":"Investment", "edelweiss mf":"Investment", 
+  "quant mf":"Investment", "pgim india":"Investment", "baroda bnp":"Investment", "mahindra manulife":"Investment", "union mf":"Investment", 
+  "boi axa":"Investment", "idbi mf":"Investment", "jm financial":"Investment", "shriram mf":"Investment", "taurus mf":"Investment", "iifl mf":"Investment", 
+  "nj wealth":"Investment", "prudent":"Investment", "fundsindia":"Investment", "wealthy":"Investment", "piggy":"Investment", "fisdom":"Investment", 
+  "goalwise":"Investment", "clearfunds":"Investment", "orowealth":"Investment", "coin by zerodha":"Investment", "angel bee":"Investment", "hdfc life":"Investment", 
+  "icici prudential":"Investment", "kotak life":"Investment", "reliance nippon":"Investment", "future generali":"Investment", "bharti axa":"Investment", 
+  "aviva":"Investment", "aegon":"Investment", "edelweiss tokio":"Investment", "iffco tokio":"Investment", "national insurance":"Investment", 
+  "new india assurance":"Investment", "oriental insurance":"Investment", "united india":"Investment", "care health":"Investment", "religare health":"Investment", 
+  "niva bupa":"Investment", "max bupa":"Investment", "manipal cigna":"Investment", "cholamandalam ms":"Investment", "royal sundaram":"Investment", 
+  "liberty general":"Investment", "raheja qbe":"Investment", "sbi general":"Investment", "shriram general":"Investment", "universal sompo":"Investment", 
+  "coinswitch":"Investment", "zebpay":"Investment", "unocoin":"Investment", "bitbns":"Investment", "giottus":"Investment", "vauld":"Investment", 
+  "mudrex":"Investment", "kucoin":"Investment", "kraken":"Investment", "huobi":"Investment", "okx":"Investment", "bybit":"Investment", 
+  "epf":"Investment", "vpf":"Investment", "nsc":"Investment", "kavach":"Investment", "post office":"Investment", "sukanya samriddhi":"Investment",
+
+  // ==========================================
+  // 🏥 HEALTH & MEDICAL (~100)
+  // ==========================================
+  "apollo":"Health", "pharmeasy":"Health", "1mg":"Health", "tata 1mg":"Health", "netmeds":"Health", "medplus":"Health", "wellness forever":"Health", 
+  "medanta":"Health", "fortis":"Health", "max hospital":"Health", "artemis":"Health", "paras hospital":"Health", "dr lal":"Health", "srl":"Health", 
+  "thyrocare":"Health", "pathkind":"Health", "practo":"Health", "cult fit":"Health", "curefit":"Health", "healthkart":"Health", "anytime fitness":"Health", 
+  "gold's gym":"Health", "pharmacy":"Health", "hospital":"Health", "clinic":"Health", "truemeds":"Health", "apollo 247":"Health", "healthians":"Health", 
+  "redcliffe":"Health", "agilus":"Health", "manipal":"Health", "narayana":"Health", "aster":"Health", "aiims":"Health", "dr batra":"Health", 
+  "lenskart":"Health", "titan eye":"Health", "myprotein":"Health", "muscleblaze":"Health", "optimumnutrition":"Health", "frank ross":"Health", 
+  "medlife":"Health", "sanjivani":"Health", "guardian pharmacy":"Health", "sahayog":"Health", "dawaa dost":"Health", "zoylo":"Health", "mfine":"Health", 
+  "docsapp":"Health", "lybrate":"Health", "medcord":"Health", "care.fit":"Health", "mind.fit":"Health", "portea":"Health", "nightingales":"Health", 
+  "hcah":"Health", "apollo homecare":"Health", "medica":"Health", "kims":"Health", "care hospitals":"Health", "yashoda":"Health", "rainbow hospitals":"Health", 
+  "cloudnine":"Health", "motherhood":"Health", "ovum":"Health", "nova ivf":"Health", "indira ivf":"Health", "dr agarwals":"Health", "vasan eye":"Health", 
+  "centre for sight":"Health", "clove dental":"Health", "sabka dentist":"Health", "partha dental":"Health", "vlcc":"Health", "kaya":"Health", "richfeel":"Health", 
+  "talwalkars":"Health", "fitness first":"Health", "snap fitness":"Health", "chisel":"Health", "fitpass":"Health", "gympik":"Health", "cure.fit":"Health",
+
+  // ==========================================
+  // 🚗 TRANSPORT, TRAVEL & FUEL (~130)
+  // ==========================================
+  "uber":"Transport", "ola":"Transport", "blusmart":"Transport", "rapido":"Transport", "irctc":"Transport", "makemytrip":"Transport", "goibibo":"Transport", 
+  "yatra":"Transport", "redbus":"Transport", "easemytrip":"Transport", "cleartrip":"Transport", "ixigo":"Transport", "indigo":"Transport", "air india":"Transport", 
+  "vistara":"Transport", "spicejet":"Transport", "akasa air":"Transport", "dmrc":"Transport", "metro":"Transport", "fastag":"Transport", "park+":"Transport", 
+  "zoomcar":"Transport", "revv":"Transport", "iocl":"Transport", "hpcl":"Transport", "bpcl":"Transport", "shell":"Transport", "nayara":"Transport", 
+  "indian oil":"Transport", "bharat petroleum":"Transport", "petrol":"Transport", "fuel":"Transport", "gas agency":"Transport", "toll":"Transport", 
+  "booking.com":"Transport", "agoda":"Transport", "airbnb":"Transport", "oyo":"Transport", "treebo":"Transport", "fabhotels":"Transport", "abhibus":"Transport", 
+  "zingbus":"Transport", "ntes":"Transport", "whereismytrain":"Transport", "chalo":"Transport", "namma yatri":"Transport", "indrive":"Transport", 
+  "uber moto":"Transport", "ola bike":"Transport", "drivezy":"Transport", "cars24":"Transport", "spinny":"Transport", "gomechanic":"Transport", 
+  "pitstop":"Transport", "nhai":"Transport", "airasia":"Transport", "goair":"Transport", "trujet":"Transport", "star air":"Transport", "flybig":"Transport", 
+  "vrl":"Transport", "srs travels":"Transport", "kks travels":"Transport", "orange travels":"Transport", "neeta travels":"Transport", "chartered bus":"Transport", 
+  "srtc":"Transport", "ksrtc":"Transport", "apsrtc":"Transport", "tsrtc":"Transport", "gsrtc":"Transport", "msrtc":"Transport", "rsrtc":"Transport", 
+  "hrtc":"Transport", "prtc":"Transport", "upsrtc":"Transport", "utc":"Transport", "dts":"Transport", "pmpml":"Transport", "bmtc":"Transport", 
+  "mmrda":"Transport", "cidco":"Transport", "rto":"Transport", "vahan":"Transport", "sarathi":"Transport", "parivahan":"Transport", "echallan":"Transport", 
+  "myfastag":"Transport", "hdfc fastag":"Transport", "icici fastag":"Transport", "paytm fastag":"Transport", "sbi fastag":"Transport", "idfc fastag":"Transport", 
+  "axis fastag":"Transport", "kotak fastag":"Transport", "air france":"Transport", "lufthansa":"Transport", "emirates":"Transport", "etihad":"Transport", 
+  "qatar airways":"Transport", "singapore airlines":"Transport", "thai airways":"Transport", "malaysia airlines":"Transport", "british airways":"Transport", 
+  "united airlines":"Transport", "delta":"Transport", "american airlines":"Transport", "kayak":"Transport", "skyscanner":"Transport", "expedia":"Transport", 
+  "tripadvisor":"Transport", "thomas cook":"Transport", "sotc":"Transport", "cox & kings":"Transport", "club mahindra":"Transport", "sterling holidays":"Transport",
+
+  // ==========================================
+  // 🎬 ENTERTAINMENT & SUBSCRIPTIONS (~100)
+  // ==========================================
+  "netflix":"Entertainment", "amazon prime":"Entertainment", "hotstar":"Entertainment", "spotify":"Entertainment", "sony liv":"Entertainment", "zee5":"Entertainment", 
+  "bookmyshow":"Entertainment", "pvr":"Entertainment", "inox":"Entertainment", "cinepolis":"Entertainment", "youtube premium":"Entertainment", 
+  "apple music":"Entertainment", "jiosaavn":"Entertainment", "wynk":"Entertainment", "audible":"Entertainment", "paytm tickets":"Entertainment", 
+  "insider":"Entertainment", "smaaash":"Entertainment", "timezone":"Entertainment", "jiocinema":"Entertainment", "alt balaji":"Entertainment", 
+  "voot":"Entertainment", "discovery+":"Entertainment", "aha":"Entertainment", "sun nxt":"Entertainment", "epic games":"Entertainment", "steam":"Entertainment", 
+  "playstation":"Entertainment", "xbox":"Entertainment", "nintendo":"Entertainment", "pubg":"Entertainment", "bgmi":"Entertainment", "free fire":"Entertainment", 
+  "tinder":"Entertainment", "bumble":"Entertainment", "hinge":"Entertainment", "aisle":"Entertainment", "trulymadly":"Entertainment", "jeevansathi":"Entertainment", 
+  "shaadi.com":"Entertainment", "bharatmatrimony":"Entertainment", "okcupid":"Entertainment", "happn":"Entertainment", "hoichoi":"Entertainment", 
+  "eros now":"Entertainment", "mx player":"Entertainment", "lionsgate play":"Entertainment", "mubi":"Entertainment", "crunchyroll":"Entertainment", 
+  "ullu":"Entertainment", "kuku fm":"Entertainment", "pocket fm":"Entertainment", "storytel":"Entertainment", "gaana":"Entertainment", "hungama":"Entertainment", 
+  "ticketmaster":"Entertainment", "meraevents":"Entertainment", "eventshigh":"Entertainment", "townscript":"Entertainment", "carnival cinemas":"Entertainment", 
+  "miraj cinemas":"Entertainment", "mukta a2":"Entertainment", "wave cinemas":"Entertainment", "srs cinemas":"Entertainment", "asian cinemas":"Entertainment", 
+  "ags cinemas":"Entertainment", "satyam cineplexes":"Entertainment", "pvr icon":"Entertainment", "pvr director's cut":"Entertainment", "pvr gold":"Entertainment", 
+  "playstation network":"Entertainment", "xbox live":"Entertainment", "ea play":"Entertainment", "ubisoft":"Entertainment", "rockstar games":"Entertainment", 
+  "roblox":"Entertainment", "minecraft":"Entertainment", "call of duty":"Entertainment", "valorant":"Entertainment", "riot games":"Entertainment", 
+  "dream11":"Entertainment", "mpl":"Entertainment", "my11circle":"Entertainment", "winzo":"Entertainment", "junglee rummy":"Entertainment", "rummy circle":"Entertainment", 
+
+  // ==========================================
+  // 📚 EDUCATION & LEARNING (~70)
+  // ==========================================
+  "byjus":"Education", "unacademy":"Education", "vedantu":"Education", "udemy":"Education", "coursera":"Education", "upgrad":"Education", 
+  "simplilearn":"Education", "physics wallah":"Education", "allen":"Education", "aakash":"Education", "school fee":"Education", "college fee":"Education", 
+  "fiitjee":"Education", "resonance":"Education", "khan academy":"Education", "toppr":"Education", "doubtnut":"Education", "testbook":"Education", 
+  "adda247":"Education", "cuemath":"Education", "whitehat jr":"Education", "great learning":"Education", "internshala":"Education", "edx":"Education", 
+  "skillshare":"Education", "pluralsight":"Education", "codecademy":"Education", "datacamp":"Education", "udacity":"Education", "edureka":"Education", 
+  "intellipaat":"Education", "jigsaw academy":"Education", "board infinity":"Education", "bada business":"Education", "extramarks":"Education", 
+  "meritnation":"Education", "brainly":"Education", "quizlet":"Education", "duolingo":"Education", "babbel":"Education", "rosetta stone":"Education", 
+  "busuu":"Education", "unstop":"Education", "dare2compete":"Education", "hackerrank":"Education", "leetcode":"Education", "geeksforgeeks":"Education", 
+  "coding ninjas":"Education", "scaler":"Education", "masai school":"Education", "camp k12":"Education", "lid learning":"Education", "planetspark":"Education", 
+  "adda 247":"Education", "gradeup":"Education", "oliveboard":"Education", "ixambee":"Education", "study iq":"Education", "vision ias":"Education", 
+  "vajiram and ravi":"Education", "drishti ias":"Education", "chahal academy":"Education", "raus ias":"Education", "sriram ias":"Education", 
+  "brilliant tutorials":"Education", "bansal classes":"Education", "vibrant academy":"Education", "motion education":"Education", "narayana group":"Education", 
+  "sri chaitanya":"Education", "pace iit":"Education", "vidyamandir":"Education", 
+
+  // ==========================================
+  // 🥦 FRUITS, VEGGIES & MISC (~20)
+  // ==========================================
+  "safal":"Fruits Vegies", "otipy":"Fruits Vegies", "fraazo":"Fruits Vegies", "pluckk":"Fruits Vegies", "vegetable":"Fruits Vegies", 
+  "fruit":"Fruits Vegies", "mandi":"Fruits Vegies", "kisanserv":"Fruits Vegies", "ninjacart":"Fruits Vegies", "waycool":"Fruits Vegies", 
+  "crofarm":"Fruits Vegies", "zappfresh":"Fruits Vegies", "fresh to home":"Fruits Vegies", "fipola":"Fruits Vegies", "everyday meat":"Fruits Vegies", 
+  "nandu's":"Fruits Vegies", "luscious":"Fruits Vegies", "dhl":"Bills", "bluedart":"Bills", "dtdc":"Bills", "delhivery":"Bills", "xpressbees":"Bills",
+   
+   // ==========================================
+  // ✈️ TRAVEL (100 Merchants)
+  // ==========================================
+  "makemytrip": "Travel", "goibibo": "Travel", "yatra": "Travel", "easemytrip": "Travel", "cleartrip": "Travel", 
+  "ixigo": "Travel", "booking.com": "Travel", "agoda": "Travel", "airbnb": "Travel", "expedia": "Travel", 
+  "skyscanner": "Travel", "kayak": "Travel", "tripadvisor": "Travel", "thomas cook": "Travel", "sotc": "Travel", 
+  "cox and kings": "Travel", "hostelworld": "Travel", "trivago": "Travel", "wego": "Travel", "hopper": "Travel", 
+  "klook": "Travel", "viator": "Travel", "indigo": "Travel", "air india": "Travel", "vistara": "Travel", 
+  "spicejet": "Travel", "akasa air": "Travel", "airasia": "Travel", "goair": "Travel", "qatar airways": "Travel", 
+  "emirates": "Travel", "etihad": "Travel", "lufthansa": "Travel", "british airways": "Travel", "singapore airlines": "Travel", 
+  "air france": "Travel", "klm": "Travel", "united airlines": "Travel", "american airlines": "Travel", "delta": "Travel", 
+  "thai airways": "Travel", "malaysia airlines": "Travel", "sri lankan airlines": "Travel", "flydubai": "Travel", "air arabia": "Travel", 
+  "oman air": "Travel", "kuwait airways": "Travel", "saudia": "Travel", "virgin atlantic": "Travel", "japan airlines": "Travel", 
+  "ana": "Travel", "cathay pacific": "Travel", "oyo": "Travel", "treebo": "Travel", "fabhotels": "Travel", 
+  "taj hotels": "Travel", "itc hotels": "Travel", "marriott": "Travel", "radisson": "Travel", "hyatt": "Travel", 
+  "novotel": "Travel", "ibis": "Travel", "lemon tree": "Travel", "clarks": "Travel", "the lalit": "Travel", 
+  "the leela": "Travel", "oberoi hotels": "Travel", "ginger hotels": "Travel", "zostel": "Travel", "bloom hotels": "Travel", 
+  "fern hotels": "Travel", "redbus": "Travel", "abhibus": "Travel", "zingbus": "Travel", "intrcity": "Travel", 
+  "nubus": "Travel", "srs travels": "Travel", "vrl travels": "Travel", "neeta travels": "Travel", "orange travels": "Travel", 
+  "chartered bus": "Travel", "hrtc": "Travel", "upsrtc": "Travel", "rsrtc": "Travel", "msrtc": "Travel", 
+  "gsrtc": "Travel", "ksrtc": "Travel", "apsrtc": "Travel", "tsrtc": "Travel", "prtc": "Travel", 
+  "zoomcar": "Travel", "revv": "Travel", "savaari": "Travel", "avis": "Travel", "hertz": "Travel", 
+  "irctc": "Travel", "ntes": "Travel", "vfs global": "Travel", "bookmyforex": "Travel", "irctc tourism": "Travel",
+
+  // ==========================================
+  // 💅 PERSONAL CARE, SALON & WELLNESS (100 Merchants)
+  // ==========================================
+  "lakme salon": "Personal", "geetanjali salon": "Personal", "looks salon": "Personal", "toni & guy": "Personal", "bblunt": "Personal", 
+  "enrich salon": "Personal", "jawed habib": "Personal", "o2 spa": "Personal", "vlcc": "Personal", "kaya clinic": "Personal", 
+  "urban company": "Personal", "bodycraft": "Personal", "jean claude biguine": "Personal", "truefitt and hill": "Personal", "affinity salon": "Personal", 
+  "naturals salon": "Personal", "green trends": "Personal", "kapil's salon": "Personal", "juice salon": "Personal", "ylg salon": "Personal", 
+  "nykaa": "Personal", "purplle": "Personal", "myglamm": "Personal", "sugar cosmetics": "Personal", "plum goodness": "Personal", 
+  "mamaearth": "Personal", "mcaffeine": "Personal", "wow skin science": "Personal", "minimalist": "Personal", "dermaco": "Personal", 
+  "aqualogica": "Personal", "dot & key": "Personal", "maccaron": "Personal", "tira": "Personal", "sephora": "Personal", 
+  "boddess": "Personal", "smytten": "Personal", "foxy": "Personal", "m.a.c": "Personal", "bobbi brown": "Personal", 
+  "the body shop": "Personal", "bath and body works": "Personal", "kama ayurveda": "Personal", "forest essentials": "Personal", "biotique": "Personal", 
+  "lotus herbals": "Personal", "colorbar": "Personal", "faces canada": "Personal", "revlon": "Personal", "l'oreal": "Personal", 
+  "maybelline": "Personal", "garnier": "Personal", "nivea": "Personal", "dove": "Personal", "tresemme": "Personal", 
+  "pantene": "Personal", "head & shoulders": "Personal", "gillette": "Personal", "bombay shaving company": "Personal", "the man company": "Personal", 
+  "beardo": "Personal", "ustraa": "Personal", "traya": "Personal", "man matters": "Personal", "body cupid": "Personal", 
+  "bella vita": "Personal", "renee cosmetics": "Personal", "insight cosmetics": "Personal", "blue heaven": "Personal", "astrotalk": "Personal", 
+  "vama": "Personal", "bodhi": "Personal", "betterhelp": "Personal", "wysa": "Personal", "yourdost": "Personal", 
+  "amaha": "Personal", "healofy": "Personal", "babychakra": "Personal", "carmesi": "Personal", "pee safe": "Personal", 
+  "sirona": "Personal", "everteen": "Personal", "nua": "Personal", "whisper": "Personal", "stayfree": "Personal", 
+  "sanfe": "Personal", "bare anatomy": "Personal", "chemist at play": "Personal", "pilgrim": "Personal", "fixderma": "Personal", 
+  "sebamed": "Personal", "cetaphil": "Personal", "neutrogena": "Personal", "bioderma": "Personal", "clinikally": "Personal", 
+  "kult": "Personal", "flyrobe": "Personal", "rent it bae": "Personal", "clinique": "Personal", "estee lauder": "Personal",
+   // ==========================================
+  // 💰 INCOME CATEGORY MAP (Credit Transactions Only)
+  // ==========================================
+  
+  // 🏢 SALARY (Payroll Providers & Top NCR/Tech Corporates)
+  "adp": "Salary", "keka": "Salary", "greythr": "Salary", "quess": "Salary", "teamlease": "Salary",
+  "tcs": "Salary", "infosys": "Salary", "wipro": "Salary", "hcl": "Salary", "tech mahindra": "Salary",
+  "accenture": "Salary", "cognizant": "Salary", "capgemini": "Salary", "ibm": "Salary", 
+  "deloitte": "Salary", "kpmg": "Salary", "ernst": "Salary", "pwc": "Salary", "genpact": "Salary", 
+  "american express": "Salary", "optum": "Salary", "google": "Salary", "microsoft": "Salary", "amazon dev": "Salary",
+
+  // 🔄 REFUND (Payment Gateways & E-commerce)
+  "razorpay": "Refund", "ccavenue": "Refund", "payu": "Refund", "billdesk": "Refund", 
+  "cashfree": "Refund", "instamojo": "Refund", "juspay": "Refund", "stripe": "Refund",
+  "irctc refund": "Refund", "amazon pay refund": "Refund", "flipkart refund": "Refund", 
+
+  // 📈 INVESTMENT RETURNS (Brokers, AMCs, Clearing Corps)
+  "iccl": "Investment Returns", // BSE Clearing
+  "ncl": "Investment Returns",  // NSE Clearing
+  "cdsl": "Investment Returns", "nsdl": "Investment Returns", "epfo": "Investment Returns", 
+  "zerodha broking": "Investment Returns", "groww": "Investment Returns", "upstox": "Investment Returns", 
+  "sbi mutual fund": "Investment Returns", "hdfc mf": "Investment Returns", "nippon india": "Investment Returns", 
+  "axis mutual fund": "Investment Returns", "uti mf": "Investment Returns", "kotak mf": "Investment Returns", 
+  "wazirx": "Investment Returns", "coindcx": "Investment Returns", "coinswitch": "Investment Returns",
+
+  // 💻 BUSINESS / FREELANCE (Gig Platforms & Ads)
+  "upwork": "Business", "fiverr": "Business", "freelancer": "Business", "toptal": "Business",
+  "paypal": "Business", "payoneer": "Business", "google adsense": "Business", "youtube": "Business",
+  "facebook payouts": "Business", "apple dev": "Business", "razorpay route": "Business",
+
+  // 🎁 GIFTS & OTHER INCOME (Rewards & Winnings)
+  "dream11": "Other Income", "my11circle": "Other Income", "mpl": "Other Income", "winzo": "Other Income",
+  "cred cashback": "Gifts", "gpay reward": "Gifts", "phonepe cashback": "Gifts", "paytm cashback": "Gifts"
+},
+  "categories": [
+    "Bills",        // Electricity, Rent, Recharges, Loans
+    "Education",          // School fees, Courses, Books
+    "Entertainment",      // Movies, OTT, Gaming, Pubs
+    "Food",      // Swiggy, Zomato, Restaurants, Cafes
+    "Fruits Vegies",
+    "Grocery",            // Blinkit, DMart, Sabzi, Daily needs
+    "Health",   // Pharmacy, Doctor, Gym, Supplements
+    "Investment",         // SIP, Stocks, FD, Crypto
+    "Personal",      // Salon, Cosmetics, Spa
+    "Shopping",           // Amazon, Myntra, Clothes, Gadgets
+    "Transport",          // Uber, Metro, Petrol, FASTag
+    "Travel",             // Flights, Hotels, Vacations
+    "Other"               // Miscellaneous
+  ],
+
+  "incomeCategories": [
+    "Gifts",      // Diwali bonus, Shagun, Cash gifts
+    "Business",           // Freelance, Shop income, Client payments
+    "Investment Returns", // Interest, Dividends, Crypto profit
+    "Other Income",       // Scrap sale, Lottery, etc.
+    "Refund",             // Order cancellations, Tax refund
+    "Salary"              // Main job income
+  ],
+  "dynamicColors": {
+    "Education": "0xFF2196F3",
+    "Personal": "0xFF9C27B0",
+    "Entertainment": "0xFF673AB7"
+    "travel": "0xFF00BCD4",
+    "Business": "0xFF607D8B",
+    "Investment Returns": "0xFF8BC34A"
+  },
+  "dynamicIcons": {
+    "Education": "school",
+    "Personal": "person",
+    "Entertainment": "movie"
+    "travel": "flight",
+    "Business": "business_center",
+    "Investment Returns": "savings"
   }
 }

@@ -1,4 +1,4 @@
-package com.pikumks.budgetguard
+package com.budgetguard
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

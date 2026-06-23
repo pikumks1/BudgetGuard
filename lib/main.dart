@@ -16,6 +16,9 @@ void main() async {
   // ---> YEH 2 LINES ADD KAREIN TEST KE LIYE <---
   debugPrint("Total Categories: ${AppConstants.categories.length}");
   debugPrint("Is Zepto mapped?: ${AppConstants.merchantCategoryMap['zepto']}");
+  debugPrint("Is Categories?: ${AppConstants.categories}");
+  debugPrint("Is Icons?: ${AppConstants.dynamicIcons}");
+  debugPrint("Is Colours?: ${AppConstants.dynamicColors}");
 
   runApp(
     MaterialApp(

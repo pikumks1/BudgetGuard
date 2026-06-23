@@ -24,7 +24,8 @@ class RemoteConfigService {
     // 2. Background mein internet se naya data laao
     try {
       // ---> YAHAN APNE GITHUB GIST KA 'RAW' URL DAALIYE <---
-      final url = Uri.parse('https://gist.githubusercontent.com/pikumks1/ea13d45a1dbb4dd665bef3b7924681d5/raw/constants.json');
+      //final url = Uri.parse('https://gist.githubusercontent.com/pikumks1/ea13d45a1dbb4dd665bef3b7924681d5/raw/constants.json');
+      final url = Uri.parse('https://gist.githubusercontent.com/pikumks1/ea13d45a1dbb4dd665bef3b7924681d5/raw/constants.json?v=${DateTime.now().millisecondsSinceEpoch}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -65,10 +66,16 @@ class RemoteConfigService {
 
     if (data.containsKey('dynamicColors')) {
       AppConstants.dynamicColors = Map<String, String>.from(data['dynamicColors']);
+
+      debugPrint("category colors: ${AppConstants.dynamicColors}");
     }
 
     if (data.containsKey('dynamicIcons')) {
       AppConstants.dynamicIcons = Map<String, String>.from(data['dynamicIcons']);
+      // Yahan pata chalega ki internet se dictionary aayi ya nahi
+      debugPrint("🔥 DEBUG 1: JSON se dynamic icons load ho gaye -> ${AppConstants.dynamicIcons}");
+    } else {
+      debugPrint("❌ DEBUG 1 ERROR: JSON ke andar 'dynamicIcons' key hi nahi mili!");
     }
 
     // Naye ignore keywords ko internet se fetch karo

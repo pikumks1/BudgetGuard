@@ -16,7 +16,7 @@ void backgroundMessageHandler(tele.SmsMessage message) async {
 }
 
 class SmsParserService {
-  static final List<String> _strictWords = ['cred', 'vi', 'eat', 'sip', 'jio', 'ola'];
+  static final List<String> _strictWords = ['vi', 'eat', 'sip', 'jio', 'ola', 'igl', 'mcg', 'srl', 'pvr', 'mall', 'fuel', 'toll', 'oyo', 'aha', 'vpf', 'epf', 'rto', 'mcd', 'ndmc', 'ccd', 'bata'];
 
   static String getFallbackCategory(String merchant) {
     String m = merchant.toLowerCase();
@@ -78,7 +78,7 @@ class SmsParserService {
 
     // Transaction Type nikalne ke liye simple keywords check karenge
     String type = 'Unknown';
-    if (lowerMsg.contains('credited') || lowerMsg.contains('received') || lowerMsg.contains('added') || lowerMsg.contains('refund') || lowerMsg.contains('reversal') || lowerMsg.contains('deposit') || lowerMsg.contains('transferred to')) {
+    if (lowerMsg.contains('credited') || lowerMsg.contains('received') || lowerMsg.contains('added') || lowerMsg.contains('refund') || lowerMsg.contains('reversal') || lowerMsg.contains('deposited') || lowerMsg.contains('transferred to')) {
       if ((lowerMsg.contains('credit card') || lowerMsg.contains('cc bill')) && (lowerMsg.contains('credited') || lowerMsg.contains('received'))) {
         type = 'Debit';
       } else {
@@ -187,7 +187,7 @@ class SmsParserService {
     // REFERENCE / TXN NUMBER EXTRACTOR <---
     String refNumber = '';
     // Yeh regex Ref, Txn, ya UTR ke baad aane wale 6 ya usse zyada digits/alphanumeric ko pakdega
-    RegExp refRegExp = RegExp(r"(?:ref(?:\.?\s*no\.?)?|txn(?:\.?\s*id)?|utr|upi\s*ref)[\s\:\-]*([0-9a-zA-Z]{6,})", caseSensitive: false);
+    RegExp refRegExp = RegExp(r"(?:ref(?:\.?\s*no\.?)?|txn(?:\.?\s*id)?|transaction(?:\s*id)?|trx|utr|upi\s*ref)[\s\:\-]*([0-9a-zA-Z]{6,})", caseSensitive: false);
     var refMatch = refRegExp.firstMatch(lowerMsg);
 
     if (refMatch != null && refMatch.group(1) != null) {
@@ -234,16 +234,18 @@ class SmsParserService {
       }
     }
 
-    String lowerMerchant = merchant.toLowerCase();
-    //String lowerType = type.toLowerCase();
-    String lowerAccount = accountInfo.toLowerCase();
+    // Data Filteration rules:
+    // Step 1: Mandatory Fields Check (Amount 0 hai ya Type pata nahi chala toh reject)
+    if (amount <= 0.0 || type == 'Unknown' || type.isEmpty) {
+      return null;
+    }
 
-    // SQL 'LIKE' jaisa behavior: Agar string ke andar yeh words kahin bhi hain
-    bool isMerchantUnknown = (lowerMerchant.contains('unknown') || lowerMerchant.contains('general expense'));
-    bool isTypeOrAccountUnknown = (lowerType.contains('unknown') || lowerAccount.contains('cash/other'));
+    // Step 2: Entity Check (Kahan se paise kate/aaye aur kisko gaye - dono unknown nahi hone chahiye)
+    bool isAccountUnknown = (accountInfo == 'Cash/Other' || accountInfo.toLowerCase().contains('unknown'));
+    bool isMerchantUnknown = (merchant == 'Unknown' || merchant == 'General Expense' || merchant.isEmpty); // || merchant == 'General Income' excluded
 
-    if (isMerchantUnknown && isTypeOrAccountUnknown) {
-      return null; // Dono conditions mili toh seedha reject
+    if (isAccountUnknown && isMerchantUnknown) {
+      //return null; // Dono unknown hain, iska matlab garbage SMS hai, reject kar do
     }
 
     return {'amount': amount, 'type': type, 'merchant': merchant, 'date': date.toIso8601String(), 'body': originalMsg, 'category': category, 'account': accountInfo, 'payMode': payMode, 'is_expense': isExpenseFlag, 'is_edited': 0, 'ref_number': refNumber};

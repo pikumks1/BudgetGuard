@@ -476,29 +476,38 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                     ),
                     const SizedBox(height: 8),
 
-                    Wrap(
-                      spacing: 8.0,
-                      runSpacing: 10.0,
-                      children: currentCategories.map((String c) {
-                        bool isSelected = selectedCategory == c;
-                        Color catColor = AppConstants.getCategoryColor(c);
-                        return ChoiceChip(
-                          label: Text(c),
-                          selected: isSelected,
-                          showCheckmark: false,
-                          avatar: Icon(AppConstants.getCategoryIcon(c), color: isSelected ? Colors.white : catColor, size: 18),
-                          selectedColor: catColor,
-                          backgroundColor: catColor.withValues(alpha: 0.1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            side: BorderSide(color: isSelected ? catColor : Colors.transparent),
-                          ),
-                          labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13),
-                          onSelected: (bool selected) {
-                            if (selected) setModalState(() => selectedCategory = c);
-                          },
-                        );
-                      }).toList(),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 150, // 3 lines ki fixed height
+                      ),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(), // Smooth iPhone jaisa scroll
+                        child: Wrap(
+                          spacing: 8.0,
+                          runSpacing: 10.0,
+                          children: currentCategories.map((String c) {
+                            bool isSelected = selectedCategory == c;
+                            Color catColor = AppConstants.getCategoryColor(c);
+
+                            return ChoiceChip(
+                              label: Text(c),
+                              selected: isSelected,
+                              showCheckmark: false,
+                              avatar: Icon(AppConstants.getCategoryIcon(c), color: isSelected ? Colors.white : catColor, size: 18),
+                              selectedColor: catColor,
+                              backgroundColor: catColor.withValues(alpha: 0.1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(color: isSelected ? catColor : Colors.transparent),
+                              ),
+                              labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13.0),
+                              onSelected: (bool selected) {
+                                if (selected) setModalState(() => selectedCategory = c);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 24),
@@ -579,20 +588,32 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                   // 1. EXPENSE CATEGORIES SECTION
                   const Text(
                     "EXPENSE CATEGORIES",
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey),
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(spacing: 8.0, runSpacing: 10.0, children: AppConstants.categories.map((c) => _buildBulkChip(ctx, c, 'Debit')).toList()),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 150),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Wrap(spacing: 8.0, runSpacing: 10.0, children: AppConstants.categories.map((c) => _buildBulkChip(ctx, c, 'Debit')).toList()),
+                    ),
+                  ),
 
                   const SizedBox(height: 24),
 
                   // 2. INCOME CATEGORIES SECTION
                   const Text(
                     "INCOME CATEGORIES",
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey),
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(spacing: 8.0, runSpacing: 10.0, children: AppConstants.incomeCategories.map((c) => _buildBulkChip(ctx, c, 'Credit')).toList()),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 100), // Income ki categories kam hain toh iski height thodi kam rakhi hai
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Wrap(spacing: 8.0, runSpacing: 10.0, children: AppConstants.incomeCategories.map((c) => _buildBulkChip(ctx, c, 'Credit')).toList()),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -606,39 +627,30 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
     Color catColor = AppConstants.getCategoryColor(category);
 
     return ActionChip(
-      label: Text(category, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+      label: Text(category),
       avatar: Icon(AppConstants.getCategoryIcon(category), color: catColor, size: 18),
       backgroundColor: catColor.withValues(alpha: 0.1),
-      side: const BorderSide(color: Colors.transparent),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+
+      // ---> YAHAN PADDING BADHAI HAI <---
+      // Vertical padding ko 8.0 aur Horizontal ko 12.0 kar diya
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+
+      // Text ke aas paas ki extra space
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Colors.transparent),
+      ),
+
+      labelStyle: const TextStyle(
+        color: Colors.black87,
+        fontWeight: FontWeight.w500, // Thoda bold kar diya taaki presence feel ho
+        fontSize: 13.0, // Size wahi rakha jo aapko pasand hai
+      ),
+
       onPressed: () async {
-        final db = await DatabaseHelper.instance.database;
-
-        int updateCount = _selectedIds.length;
-        String idsPlaceholders = List.filled(updateCount, '?').join(',');
-
-        // ---> UPDATE: is_edited ko 1 mark kar diya <---
-        await db.update(
-          'expenses',
-          {
-            'category': category,
-            'type': txType,
-            'is_edited': 1, // Yahan add kiya hai!
-          },
-          where: 'id IN ($idsPlaceholders)',
-          whereArgs: _selectedIds.toList(),
-        );
-
-        setState(() {
-          _selectedIds.clear();
-        });
-
-        await _loadExpensesFromDB();
-
-        if (ctx.mounted) {
-          Navigator.pop(ctx);
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Updated $updateCount items to $category!"), backgroundColor: txType == 'Credit' ? Colors.green : AppConstants.primaryColor));
-        }
+        // ... aapka existing logic ...
       },
     );
   }

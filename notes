@@ -69,3 +69,20 @@ Ctrl + Shift + F >> to search repositry
 
 --
 dart run change_app_package_name:main com.pikumks.budgetguard  >> change applicationId of app: Package name
+
+
+>>
+flutter pub add --dev change_app_package_name
+dart run change_app_package_name:main com.pikumks.budgetguard
+flutter clean
+flutter pub get
+
+--
+flutter build appbundle  >> to create .aab
+
+---
+
+verson to be modifed in each release
+1.0.1+4   ← Bug fixes
+1.1.0+10  ← New features
+2.0.0+25  ← Major redesign

@@ -41,12 +41,25 @@ class AppConstants {
   static IconData getCategoryIcon(String category) {
     String cleanCategory = category.toLowerCase();
 
-    // 1. Naya logic: Pehle JSON wala icon check karo
+    // Check 1: App kis naam se icon dhoondh rahi hai?
+    debugPrint("🔍 DEBUG 2: App icon dhoondh rahi hai for category -> '$cleanCategory'");
+
     if (dynamicIcons.containsKey(cleanCategory)) {
       String iconName = dynamicIcons[cleanCategory]!;
+      // Check 2: JSON mein category mil gayi!
+      debugPrint("✅ DEBUG 3: '$cleanCategory' JSON map mein mil gayi! Icon mapped as -> '$iconName'");
+
       if (availableIcons.containsKey(iconName)) {
+        // Check 3: Icon availableIcons dictionary mein bhi hai
+        debugPrint("🎯 DEBUG 4: Icon '$iconName' availableIcons me mil gaya. PERFECT MATCH!");
         return availableIcons[iconName]!;
+      } else {
+        // Check 4: ERROR - JSON mein naam toh hai, par availableIcons map mein define karna bhool gaye
+        debugPrint("⚠️ DEBUG ERROR: '$iconName' JSON me toh hai, par AppConstants.availableIcons me define nahi hai!");
       }
+    } else {
+      // Check 5: JSON mein nahi mila, ab switch case me jayega
+      debugPrint("📉 DEBUG 5: '$cleanCategory' dynamic JSON me nahi mila, default fallback chalega.");
     }
 
     switch (cleanCategory) {
@@ -68,17 +81,23 @@ class AppConstants {
         return Icons.trending_up;
       case 'transfer':
         return Icons.swap_horiz;
+      case 'selfcare':
+        return Icons.person;
+      case 'other':
+        return Icons.widgets;
       // INCOME CATEGORY
-      case 'salary':
-        return Icons.account_balance_wallet;
+      case 'salary': //payment
+        return Icons.payment;
       case 'gift':
-        return Icons.gif_box;
+        return Icons.redeem;
       case 'refund':
         return Icons.replay;
       case 'bonus':
         return Icons.card_giftcard;
       case 'other income':
-        return Icons.monetization_on;
+        return Icons.currency_rupee;
+      case 'roi':
+        return Icons.analytics;
       default:
         return Icons.category;
     }
