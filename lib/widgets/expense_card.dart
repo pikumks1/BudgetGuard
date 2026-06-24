@@ -11,15 +11,7 @@ class ExpenseCard extends StatelessWidget {
   final VoidCallback? onLongPress;
   final VoidCallback? onTap;
 
-  const ExpenseCard({
-    super.key,
-    required this.exp,
-    required this.onRefresh,
-    required this.onEdit,
-    this.isSelected = false, // Default false rahega
-    this.onLongPress,
-    this.onTap,
-  });
+  const ExpenseCard({super.key, required this.exp, required this.onRefresh, required this.onEdit, this.isSelected = false, this.onLongPress, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -33,90 +25,113 @@ class ExpenseCard extends StatelessWidget {
     String account = exp['account'] ?? 'Cash/Other';
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      // 1. Margin vertical kam kiya (6 se 5)
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      clipBehavior: Clip.antiAlias, // Taki left border proper rounded rahe
       decoration: BoxDecoration(
-        // ---> CARD KA COLOR SELECTION PE CHANGE HOGA <---
-        color: isSelected ? AppConstants.primaryColor.withValues(alpha: 0.1) : Colors.white,
+        // Pure White background for premium feel (selection par halka tint)
+        color: isSelected ? AppConstants.primaryColor.withValues(alpha: 0.08) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isSelected ? AppConstants.primaryColor : Colors.grey.shade200, width: isSelected ? 1.5 : 1),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: isSelected ? AppConstants.primaryColor : Colors.grey.shade100, width: 1),
+
+        // 2. PREMIUM COLORED SHADOW (Category ka color glow karega)
+        boxShadow: [BoxShadow(color: catColor.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
       ),
-      child: ListTile(
-        // ---> ON TAP aur LONG PRESS UPDATE <---
-        onTap: onTap ?? () => onEdit(context, exp),
-        onLongPress: onLongPress,
-
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: catColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-          child: Icon(AppConstants.getCategoryIcon(category), color: catColor, size: 24),
-        ),
-        title: Text(
-          exp['merchant'],
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Colors.black87),
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min, // Taki extra space na le
-            children: [
-              Flexible(
-                child: Text(
-                  "$category • $formattedDate",
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-                  overflow: TextOverflow.ellipsis, // Bada hoga toh ... ban jayega
-                ),
-              ),
-
-              // ---> NAYA LOGIC: DATE KE SATH EYE ICON <---
-              if (exp['is_hidden'] == 1) ...[const SizedBox(width: 6), Icon(Icons.visibility_off, size: 14, color: Colors.orange.shade600)],
-              // ------------------------------------------
-            ],
-          ),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
+      child: IntrinsicHeight(
+        // Ye fix karega ki color strip poori height le
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ---> AMOUNT KO FITTEDBOX MEIN DAALA <---
-            SizedBox(
-              width: 100, // Maximum width fix kar di
-              child: FittedBox(
-                fit: BoxFit.scaleDown, // Text bada hoga toh khud chhota dikhne lagega
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "${isCredit ? '+' : '-'} ₹${exp['amount']}",
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: !isExpense ? Colors.grey.shade400 : (isCredit ? Colors.green : Colors.red)),
+            // ---> 3. PREMIUM LEFT SIDE COLOR INDICATOR <---
+            Container(
+              width: 6, // Patli sleek line
+              color: catColor,
+            ),
+
+            // ---> MAIN CONTENT <---
+            Expanded(
+              child: ListTile(
+                // ---> 4. HEIGHT REDUCTION TWEAKS <---
+                dense: false,
+                visualDensity: const VisualDensity(horizontal: 0, vertical: -0), // Yahan se extra padding hatega
+                contentPadding: const EdgeInsets.only(left: 12, right: 16, top: 2, bottom: 2), // Padding tight ki
+
+                onTap: onTap ?? () => onEdit(context, exp),
+                onLongPress: onLongPress,
+
+                leading: Container(
+                  padding: const EdgeInsets.all(8), // Icon padding kam ki
+                  decoration: BoxDecoration(
+                    color: catColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10), // Radius thoda sharp kiya
+                  ),
+                  child: Icon(AppConstants.getCategoryIcon(category), color: catColor, size: 25), // Icon size thoda chota kiya
+                ),
+                title: Text(
+                  exp['merchant'],
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black87), // Font size tweak
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 2.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "$category • $formattedDate",
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (exp['is_hidden'] == 1) ...[const SizedBox(width: 4), Icon(Icons.visibility_off, size: 12, color: Colors.orange.shade600)],
+                    ],
+                  ),
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 90,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "${isCredit ? '+' : '-'} ₹${exp['amount']}",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: !isExpense ? Colors.grey.shade300 : (isCredit ? Colors.green : Colors.red)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2), // Height gap kam kiya
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (isEdited) ...[const Icon(Icons.edit_note, color: Colors.orange, size: 12), const SizedBox(width: 2)],
+                        Text(
+                          account,
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 4),
+                        InkWell(
+                          onTap: () async {
+                            await DatabaseHelper.instance.toggleExpenseStatus(exp['id'], isExpense ? 0 : 1);
+                            onRefresh();
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          // ---> ARROW KO 45 DEGREE ROTATE KIYA <---
+                          child: Transform.rotate(
+                            angle: 0.7854, // Exactly 45 degrees in radians
+                            child: Icon(isCredit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded, color: !isExpense ? Colors.grey.shade400 : (isCredit ? const Color.fromARGB(255, 31, 85, 62) : const Color.fromARGB(255, 119, 14, 14)), size: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
-            // ---------------------------------------
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (isEdited) ...[const Icon(Icons.edit_note, color: Colors.orange, size: 14), const SizedBox(width: 4)],
-
-                // --- ACCOUNT NAME ADDED HERE ---
-                Text(
-                  account,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(width: 4), // Account aur Arrow ke beech ki spacing
-                // -------------------------------
-                InkWell(
-                  onTap: () async {
-                    await DatabaseHelper.instance.toggleExpenseStatus(exp['id'], isExpense ? 0 : 1);
-                    onRefresh();
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Icon(isExpense ? Icons.arrow_outward : Icons.keyboard_return, color: isExpense ? AppConstants.primaryColor : Colors.grey.shade400, size: 16),
-                ),
-              ],
             ),
           ],
         ),

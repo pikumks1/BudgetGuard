@@ -16,8 +16,21 @@ void backgroundMessageHandler(tele.SmsMessage message) async {
 }
 
 class SmsParserService {
-  static final List<String> _strictWords = ['vi', 'eat', 'sip', 'jio', 'ola', 'igl', 'mcg', 'srl', 'pvr', 'mall', 'fuel', 'toll', 'oyo', 'aha', 'vpf', 'epf', 'rto', 'mcd', 'ndmc', 'ccd', 'bata'];
-
+  // dart format off
+  static final List<String> _strictWords = ['1mg','21','24','247','ROI','a2','act','adp','ags','aha','aia','air','alt','ana','and','at','axa','b','bae','bee','big','bmc','bnp','boi','bus','by','c','cat','ccd','co','cox','cut',
+  'd2h','da','das','day','den','dev','dhl','dot','dr','dsp','dts','ea','eat','edx','epf','etf','eye','fbb','fee','fit','fm','for','gas','goa','guy','gym','h&m','hcl','hll','hp','hrx','hub','hul','hut','ias','ibm','ice','igl',
+  'iit','ion','iq','it','itc','ivf','jal','jbl','jio','jm','jr','k12','kMC','ka','kc','key','kfc','ki','klm','lal','le','lee','lg','lic','lid','liv','lot','mad','man','max','mba','mcd','mcg','mdh','me','mf','mi','mia','mio',
+  'mpl','ms','mtr','mx','n','ncl','new','nic','nik','nj','no','now','nps','nsc','nua','nxt','o2','of','oil','okx','ola','om','one','oyo','p&g','pa','pav','pay','pc','pee','pit','pnb','ppf','pru','pvr','pwc','qbe','r','ram',
+  'raw','red','rmc','rto','sbi','sip','sky','spa','sri','srl','srs','sun','taj','tbz','tcs','tea','the','to','tv','u.s','up','us','uti','van','vfs','vi','vpf','vrl','w','wow','ya','ylg','you','Food','abs','acer','acko','adda',
+  'ajio','amul','apna','asus','avis','axis','baba','bada','bake','bare','bata','bath','bbmp','beer','bell','bgmi','bhog','biba','bike','bill','blue','bmtc','boat','body','book','bose','bpcl','bses','bsnl','bull','bupa','cafe',
+  'call','camp','care','cdsl','cesc','chai','cliq','club','coca','coho','coin','cola','cook','cred','cult','dant','deli','dell','desi','dish','dmrc','dost','dove','dtdc','duty','edmc','epfo','epic','ergo','eros','estd','fern',
+  'fire','foxy','free','fuel','fund','gHMC','gail','gant','gate','giva','gold','goli','gpay','gtpl','hard','hcah','hdfc','head','hell','hill','home','hood','hpcl','hrtc','ibis','iccl','icon','idbi','idfc','iifl','ikea','inox',
+  'iocl','iqoo','jack','jean','kaka','kake','kama','kaya','keka','khan','kilo','kims','king','kpmg','kseb','kuku','kult','labs','leon','life','link','live','mall','mars','mart','mchi','meat','mega','mivi','moda','mojo','momo',
+  'moms','more','moti','moto','mpez','mpos','mseb','mtnl','mubi','nach','navi','ndmc','nhai','nike','niva','nova','nsdl','ntes','oman','only','oppo','oven','over','ovum','pace','park','payu','pepe','pgim','pine','pita','play',
+  'plum','poco','polo','post','prtc','pubg','puma','pune','rare','raus','ravi','real','rent','revv','riot','rock','ross','safe','sdmc','shiv','shop','sify','siti','skin','snap','soch','sony','sotc','star','stop','supr','taco',
+  'tape','tata','tech','thai','time','tira','tneb','toll','toni','toys','tree','uber','ullu','vada','vama','vero','vita','vivo','vlcc','voot','wala','wave','wego','wynk','wysa','xbox','zara','zee5'];
+  
+  // dart format on
   static String getFallbackCategory(String merchant) {
     String m = merchant.toLowerCase();
     for (var key in AppConstants.merchantCategoryMap.keys) {

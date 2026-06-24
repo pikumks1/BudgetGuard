@@ -631,11 +631,7 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
       avatar: Icon(AppConstants.getCategoryIcon(category), color: catColor, size: 18),
       backgroundColor: catColor.withValues(alpha: 0.1),
 
-      // ---> YAHAN PADDING BADHAI HAI <---
-      // Vertical padding ko 8.0 aur Horizontal ko 12.0 kar diya
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-
-      // Text ke aas paas ki extra space
       labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
 
       shape: RoundedRectangleBorder(
@@ -643,14 +639,60 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
         side: const BorderSide(color: Colors.transparent),
       ),
 
-      labelStyle: const TextStyle(
-        color: Colors.black87,
-        fontWeight: FontWeight.w500, // Thoda bold kar diya taaki presence feel ho
-        fontSize: 13.0, // Size wahi rakha jo aapko pasand hai
-      ),
+      labelStyle: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 13.0),
 
+      // Jaise hi tap hoga, ye block chalega aur DB update karega
       onPressed: () async {
-        // ... aapka existing logic ...
+        try {
+          final db = await DatabaseHelper.instance.database;
+
+          // Agar by chance kisi wajah se selection clear ho gaya ho
+          if (_selectedIds.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No records selected!"), backgroundColor: Colors.red));
+            }
+            return;
+          }
+
+          int updateCount = _selectedIds.length;
+          String idsPlaceholders = List.filled(updateCount, '?').join(',');
+
+          // Database ko update karo
+          int rowsAffected = await db.update(
+            'expenses',
+            {
+              'category': category,
+              'type': txType,
+              'is_edited': 1, // Record ko edited mark karna
+            },
+            where: 'id IN ($idsPlaceholders)',
+            whereArgs: _selectedIds.toList(),
+          );
+
+          // Dashboard screen se selection hatao
+          setState(() {
+            _selectedIds.clear();
+          });
+
+          // Naya data load karo
+          await _loadExpensesFromDB();
+
+          // 1. Pehle popup band karo (ctx use karke)
+          if (ctx.mounted) {
+            Navigator.pop(ctx);
+          }
+
+          // 2. Fir success/error message dikhao (main context use karke)
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Successfully updated $rowsAffected items to $category!"), backgroundColor: txType == 'Credit' ? Colors.green : AppConstants.primaryColor));
+          }
+        } catch (e) {
+          debugPrint("🔥 BULK EDIT ERROR: $e");
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save: $e"), backgroundColor: Colors.red));
+          }
+        }
       },
     );
   }
@@ -775,6 +817,26 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // ---> DYNAMIC TEXT & CIRCULAR ARROW LOGIC START <---
+    String cardTitle;
+    IconData? titleIcon;
+
+    // Sabhi state ke liye Premium Midnight Blue gradient
+    List<Color> cardGradient = [const Color(0xFF0F172A), const Color(0xFF3B82F6)];
+
+    if (_transactionTypeFilter == 'Credit') {
+      cardTitle = "Total Income";
+      titleIcon = Icons.arrow_downward_rounded;
+    } else if (_transactionTypeFilter == 'Debit') {
+      cardTitle = "Total Expense";
+      titleIcon = Icons.arrow_upward_rounded;
+    } else {
+      cardTitle = "Net Balance";
+      // Net Balance ke liye Wallet Icon laga diya
+      titleIcon = Icons.account_balance_wallet_rounded;
+    }
+    // ---> DYNAMIC LOGIC END <---
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -865,55 +927,112 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                   },
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    padding: const EdgeInsets.all(24.0),
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [AppConstants.primaryColor, AppConstants.primaryColor.withValues(alpha: 0.65)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      // ---> NAYA MIDNIGHT BLUE GRADIENT <---
+                      gradient: LinearGradient(colors: cardGradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: AppConstants.primaryColor.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 6))],
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                      boxShadow: [BoxShadow(color: cardGradient[1].withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8))],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Stack(
                       children: [
-                        // Branding & Calendar Header
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.shield_rounded, color: Colors.white, size: 20),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  "BUDGETGUARD",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 13),
+                        // Graphics (Background Shapes)
+                        Positioned(
+                          right: -50,
+                          top: -50,
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)),
+                          ),
+                        ),
+                        Positioned(
+                          left: -80,
+                          bottom: -60,
+                          child: Container(
+                            width: 220,
+                            height: 220,
+                            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.05)),
+                          ),
+                        ),
+                        Positioned(
+                          left: 60,
+                          top: -100,
+                          child: Transform.rotate(angle: 0.5, child: Container(width: 30, height: 400, color: Colors.white.withValues(alpha: 0.06))),
+                        ),
+
+                        // Main Content
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Branding
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.credit_card, color: Colors.white, size: 20),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        "BUDGETGUARD",
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "${_monthNames[_selectedMonth.month - 1]} ${_selectedMonth.year}",
+                                        style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 12),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Icon(Icons.calendar_month, color: Colors.white70, size: 16),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Title & Icon (Left)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (titleIcon != null) ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), shape: BoxShape.circle),
+                                      child: Icon(titleIcon, color: Colors.white, size: 16),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Text(
+                                    cardTitle,
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 15, letterSpacing: 0.5),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 4),
+
+                              // Amount (Center)
+                              Center(
+                                child: Text(
+                                  "₹ ${_formatIndianCurrency(_totalSpends)}",
+                                  style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -1),
                                 ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  "${_monthNames[_selectedMonth.month - 1]} ${_selectedMonth.year}",
-                                  style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 12),
-                                ),
-                                const SizedBox(width: 6),
-                                const Icon(Icons.calendar_month, color: Colors.white70, size: 16),
-                              ],
-                            ),
-                          ],
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Stats Footer
+                              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [_buildMiniStat("TODAY", _totalToday), _buildMiniStat("YESTERDAY", _totalYesterday), _buildMiniStat("WEEK", _totalWeek)]),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        // Total Balance This Month
-                        const Text(
-                          "TOTAL BALANCE THIS MONTH",
-                          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 10, letterSpacing: 1.2),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "₹ ${_formatIndianCurrency(_totalSpends)}",
-                          style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -1),
-                        ),
-                        const SizedBox(height: 24),
-                        // Stats Footer
-                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [_buildMiniStat("TODAY", _totalToday), _buildMiniStat("YESTERDAY", _totalYesterday), _buildMiniStat("WEEK", _totalWeek)]),
                       ],
                     ),
                   ),
@@ -979,7 +1098,7 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
 
               if (!_isSearching)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1101,21 +1220,23 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
             ],
           ),
 
-          // 2. NAYA STICKY MINI HEADER (Slide Animation ke sath)
+          // 2. STICKY MINI HEADER (Wapas original blue theme)
+          // 2. STICKY MINI HEADER (Premium aesthetic)
+          // 2. STICKY MINI HEADER
+          // 2. STICKY MINI HEADER
+          // 2. STICKY MINI HEADER
+          // 2. STICKY MINI HEADER
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            // Agar card hide hai, toh yeh 0 par aakar screen ke upar chipak jayega (Top bar ke theek neeche)
-            // Warna -100 par chhupa rahega
             top: _isCardHidden && !_isSearching ? 0 : -100,
             left: 0,
             right: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
-                // Bade card jaisa hi gradient
-                gradient: const LinearGradient(colors: [AppConstants.primaryColor, Color(0xFF1A5276)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                boxShadow: [BoxShadow(color: AppConstants.primaryColor.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                gradient: LinearGradient(colors: cardGradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                boxShadow: [BoxShadow(color: cardGradient[1].withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: SafeArea(
                 top: false,
@@ -1127,9 +1248,21 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          "TOTAL SPEND",
-                          style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1.0, fontWeight: FontWeight.bold),
+                        Row(
+                          children: [
+                            if (titleIcon != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), shape: BoxShape.circle),
+                                child: Icon(titleIcon, color: Colors.white, size: 10),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Text(
+                              cardTitle.toUpperCase(),
+                              style: const TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1.0, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -1138,8 +1271,9 @@ class _BudgetDashboardState extends State<BudgetDashboard> {
                         ),
                       ],
                     ),
+                    // ---> INDIAN CURRENCY FORMATTER YAHAN LAGA DIYA <---
                     Text(
-                      "₹ ${_totalSpends.toStringAsFixed(0)}",
+                      "₹ ${_formatIndianCurrency(_totalSpends)}",
                       style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.0),
                     ),
                   ],
